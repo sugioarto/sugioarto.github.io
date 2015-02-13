@@ -1,0 +1,113 @@
+
+@import url(http://fonts.googleapis.com/css?family=Roboto|Roboto+Slab|Droid+Sans+Mono);
+
+body {
+	font-family: 'Roboto Slab', Serif;
+	margin-left: 3ex;
+	margin-right: 3ex;
+	border-left: 2px dashed #ccc;
+	padding-left: 3ex;
+	padding-right: 3ex;
+	padding-top: 2em;
+	padding-bottom: 5ex;
+	color: black;
+	font-size: 10.5pt;
+	background: white;
+}
+a {
+	text-decoration: none;
+	color: #844;
+}
+div.head {
+	font-weight: bold;
+	text-align: left;
+	padding-top: 1em;
+	padding-left: 18em;
+	margin-bottom: 2em;
+	color: #f0c000;
+	border-top: 5px solid #ccc;
+	border-bottom: 5px solid #ccc;
+	background-image: url(../img/logo.svg);
+	background-repeat: no-repeat;
+	background-position: 1em 1.5em;
+}
+div.head h1 {
+	font-size: 30pt;
+	padding-top: 0;
+	padding-left: 0;
+	padding-bottom: 0;
+	margin: 0;
+}
+div.head a {
+	font-size: 18pt;
+	color: #844;
+	margin: 0;
+}
+h1,h2,h3,h4,h5,h6 {
+	font-family: 'Roboto',Sans-Serif;
+	font-size: 10pt;
+	text-align: left;
+	color: #484;
+	margin-bottom: 0;
+}
+h1 a {
+	color: #484;
+}
+h1 {
+	font-size: 24pt;
+}
+h2 {
+	font-size: 20pt;
+}
+h3 {
+	font-size: 16pt;
+}
+ol,ul {
+	padding-left: 3ex;
+	font-size: 16pt;
+	font-weight: bold;
+	margin-top: 0.5em;
+}
+ul ul {
+	font-size: 90%;
+	font-weight: normal;
+	margin-top: 0;
+}
+ol ol {
+	font-size: 90%;
+	font-weight: normal;
+	margin-top: 0;
+}
+ul a[name] {
+	color: black;
+}
+p {
+	font-size: 14pt;
+	margin-left: 1ex;
+	margin-top: 1em;
+}
+pre {
+	font-family: 'Droid Sans Mono', monospace, fixed;
+	font-weight: normal;
+	background-color: #ddd;
+}
+table {
+	margin-top: 1em;
+	font-size: 12pt;
+	font-weight: normal;
+	border-collapse: collapse;
+}
+th {
+	border: 1px solid black;
+	padding: 0.5em;
+	background-color: #dfd;
+}
+td {
+	border: 1px solid black;
+	padding: 0.5em;
+	background-color: #dfd;
+}
+code {
+	font-family: 'Droid Sans Mono', monospace, fixed;
+	font-weight: normal;
+}
