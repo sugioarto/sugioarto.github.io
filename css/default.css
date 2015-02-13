@@ -3,13 +3,7 @@
 
 body {
 	font-family: 'Roboto Slab', Serif;
-	margin-left: 3ex;
-	margin-right: 3ex;
-	border-left: 2px dashed #ccc;
-	padding-left: 3ex;
-	padding-right: 3ex;
-	padding-top: 2em;
-	padding-bottom: 5ex;
+	margin: 0 0 0 0;
 	color: black;
 	font-size: 10.5pt;
 	background: white;
@@ -20,27 +14,32 @@ a {
 }
 div.head {
 	font-weight: bold;
-	text-align: left;
-	padding-top: 1em;
-	padding-left: 18em;
-	margin-bottom: 2em;
-	color: #f0c000;
-	border-top: 5px solid #ccc;
-	border-bottom: 5px solid #ccc;
+	padding-top: 2em;
+	padding-bottom: 2em;
+	border-bottom: 2px dashed #ddd;
 	background-image: url(../img/logo.svg);
 	background-repeat: no-repeat;
 	background-position: 1em 1.5em;
+	background-color: #ccc;
+	margin: 0 0 0 0;
+	position: absolute;
+	width: 100%;
+	z-index: 1;
 }
 div.head h1 {
+	color: black;
 	font-size: 30pt;
-	padding-top: 0;
-	padding-left: 0;
-	padding-bottom: 0;
+	padding: 0.3em 0 0.3em 4em;
+	text-align: left;
 	margin: 0;
+	background: white;
+	border-top: 2px solid #ddd;
+	border-bottom: 2px solid #ddd;
+	text-shadow: 3px 3px 2px #ddd;
 }
 div.head a {
 	font-size: 18pt;
-	color: #844;
+	color: #484;
 	margin: 0;
 }
 h1,h2,h3,h4,h5,h6 {
@@ -48,7 +47,6 @@ h1,h2,h3,h4,h5,h6 {
 	font-size: 10pt;
 	text-align: left;
 	color: #484;
-	margin-bottom: 0;
 }
 h1 a {
 	color: #484;
@@ -67,6 +65,7 @@ ol,ul {
 	font-size: 16pt;
 	font-weight: bold;
 	margin-top: 0.5em;
+	color: #484;
 }
 ul ul {
 	font-size: 90%;
@@ -85,6 +84,37 @@ p {
 	font-size: 14pt;
 	margin-left: 1ex;
 	margin-top: 1em;
+}
+div.main {
+	margin: 0 3ex 0 190px;
+	padding: 150px 3ex 2em 3ex;
+	color: black;
+	font-size: 14pt;
+	background: white;
+}
+div.sidebar {
+	background-color: #ccc;
+	border-right: 2px dashed #888;
+	color: white;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 180px;
+	height: 100%;
+	padding-top: 150px;
+	margin-right: 10px;
+}
+div.sidebar ul, div.sidebar a {
+	color: #484;
+	list-style-type: none;
+	padding-left: 0.5ex;
+}
+div.warning {
+	background-color: yellow;
+	border: 2px solid red;
+}
+div.warning h1, div.warning p {
+	padding-left: 1ex;
 }
 pre {
 	font-family: 'Droid Sans Mono', monospace, fixed;
