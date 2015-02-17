@@ -1,8 +1,8 @@
 
-@import url(http://fonts.googleapis.com/css?family=Roboto|Roboto+Slab|Droid+Sans+Mono);
+@import url(http://fonts.googleapis.com/css?family=Open+Sans|Noto+Sans|Droid+Sans+Mono);
 
 body {
-	font-family: 'Roboto Slab', Serif;
+	font-family: 'Noto Sans', Sans-Serif;
 	margin: 0 0 0 0;
 	color: black;
 	font-size: 10.5pt;
@@ -10,43 +10,50 @@ body {
 }
 a {
 	text-decoration: none;
-	color: #844;
+	color:  #c82605;
 }
 div.head {
 	font-weight: bold;
-	padding-top: 2em;
-	padding-bottom: 2em;
-	border-bottom: 2px dashed #ddd;
-	background-image: url(../img/logo.svg);
-	background-repeat: no-repeat;
-	background-position: 1em 1.5em;
-	background-color: #ccc;
+	padding-top: 0;
+	padding-bottom: 0;
+	background-image: url(../img/gradient_bottom.png);
+	background-repeat: repeat-x;
+	background-position: left bottom;
+	background-color: #024e66;
 	margin: 0 0 0 0;
 	position: absolute;
 	width: 100%;
+	height: 160px;
 	z-index: 1;
 }
 div.head h1 {
-	color: black;
-	font-size: 30pt;
-	padding: 0.3em 0 0.3em 4em;
+	color: white;
+	font-size: 40pt;
+	padding: 0.6em 0 0.3em 4em;
 	text-align: left;
 	margin: 0;
-	background: white;
-	border-top: 2px solid #ddd;
-	border-bottom: 2px solid #ddd;
-	text-shadow: 3px 3px 2px #ddd;
+	background: none;
+}
+div.head div.ornament {
+	background-image: url(../img/background_grad_top.jpg);
+	background-repeat: no-repeat;
+	background-position: right top;
+	background-color: none;
+	float: right;
+	width: 240px;
+	height: 160px;
 }
 div.head a {
 	font-size: 18pt;
-	color: #484;
+	color:  #c82605;
 	margin: 0;
 }
 h1,h2,h3,h4,h5,h6 {
-	font-family: 'Roboto',Sans-Serif;
+	font-family: 'Open Sans', Sans-Serif;
 	font-size: 10pt;
+	font-weight: normal;
 	text-align: left;
-	color: #484;
+	color: #024e66;
 }
 h1 a {
 	color: #484;
@@ -62,52 +69,47 @@ h3 {
 }
 ol,ul {
 	padding-left: 3ex;
-	font-size: 16pt;
-	font-weight: bold;
 	margin-top: 0.5em;
-	color: #484;
 }
-ul ul {
-	font-size: 90%;
-	font-weight: normal;
+ul ul, ol ol {
 	margin-top: 0;
-}
-ol ol {
-	font-size: 90%;
-	font-weight: normal;
-	margin-top: 0;
-}
-ul a[name] {
-	color: black;
 }
 p {
-	font-size: 14pt;
 	margin-left: 1ex;
 	margin-top: 1em;
 }
 div.main {
-	margin: 0 3ex 0 190px;
-	padding: 150px 3ex 2em 3ex;
+	margin: 0 3ex 0 180px;
+	padding: 200px 3ex 2em 3ex;
 	color: black;
-	font-size: 14pt;
 	background: white;
 }
 div.sidebar {
-	background-color: #ccc;
-	border-right: 2px dashed #888;
-	color: white;
+	font-family: 'Open Sans', Sans-Serif;
+	background-color: none;
+	color:  #c82605;
 	position: fixed;
 	top: 0;
 	left: 0;
 	width: 180px;
 	height: 100%;
-	padding-top: 150px;
+	padding-top: 180px;
 	margin-right: 10px;
 }
+div.nav {
+	font-weight: bold;
+	font-size: 14pt;
+}
 div.sidebar ul, div.sidebar a {
-	color: #484;
 	list-style-type: none;
 	padding-left: 0.5ex;
+	font-size: 16pt;
+	font-weight: bold;
+}
+div.footer {
+	font-weight: bold;
+	font-size: 14pt;
+	margin-top: 1em;
 }
 div.warning {
 	background-color: yellow;
@@ -116,10 +118,34 @@ div.warning {
 div.warning h1, div.warning p {
 	padding-left: 1ex;
 }
+div.main-article {
+	padding: 0 3ex 2ex 3ex;
+	border-bottom: 2px dashed #024e66;
+	margin-bottom: 2em;
+}
+div.date {
+	font-style: italic;
+	float: right;
+	padding-top: 2em;
+}
+div.as {
+	margin-top: 200px;
+	margin-left: 3ex;
+	float: right;
+}
 pre {
 	font-family: 'Droid Sans Mono', monospace, fixed;
 	font-weight: normal;
 	background-color: #ddd;
+}
+table.layout {
+	padding: 0;
+}
+table.layout td {
+	padding: 0;
+	vertical-align: top;
+	background-color: white;
+	border: none;
 }
 table {
 	margin-top: 1em;
@@ -128,7 +154,7 @@ table {
 	border-collapse: collapse;
 }
 th {
-	border: 1px solid black;
+	border: 1px solid #024e66;
 	padding: 0.5em;
 	background-color: #dfd;
 }
@@ -140,4 +166,10 @@ td {
 code {
 	font-family: 'Droid Sans Mono', monospace, fixed;
 	font-weight: normal;
+	white-space: pre;
+	font-size: 80%;
+}
+p.code {
+	background-color: #d0f0fc;
+	padding: 0.5em 2ex 0.5em 2ex;
 }
