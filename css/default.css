@@ -168,8 +168,10 @@ code {
 	font-weight: normal;
 	white-space: pre;
 	font-size: 80%;
-}
-p.code {
+	display: inline-block;
 	background-color: #d0f0fc;
-	padding: 0.5em 2ex 0.5em 2ex;
+	padding: 0.2em 1ex 0.2em 1ex;
+}
+code code {
+	font-size: 100%;
 }

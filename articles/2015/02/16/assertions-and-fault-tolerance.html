@@ -49,14 +49,14 @@ I encountered during doing my daily job improving software quality.</p>
 <h2>The Case For Assertions</h2>
 
 <p>I usually use <a href="https://en.wikipedia.org/wiki/Assertion_%28software_development%29">assertions</a>
-a lot to quickly find bugs in software by inspecting invariants. This works
+a lot to quickly find bugs in software by inspecting invariants, pre- and postconditions. This works
 well and makes projects more stable and robust. While crashing obiously and
 visibly, it leads to improvement and reduction of such situations in the long
 run.</p>
 
 <p>Assertions are simple like this:</p>
 
-<p class="code"><code>assert(condition_that_has_to_hold, "message to output when it does not hold");
+<p><code>assert(condition_that_has_to_hold, "message to output when it does not hold");
 </code></p>
 
 <p>Usually assertions are implemented in a way in which they can be removed
@@ -117,7 +117,7 @@ specified and well-known bad behavior that is <em>not</em> a bug.</p>
 
 <p>In recent past I have seen code like this:</p>
 
-<p class="code"><code>if (!condition_that_has_to_hold) {
+<p><code>if (!condition_that_has_to_hold) {
     assert(false, "message to output when it does not hold");
     return;
 }
@@ -141,14 +141,14 @@ this is not fault tolerance but <em>hiding a bug</em> (or "masking" it).</p>
 <p>A proper approach is to separate these two different aspects. It might look
 like this:</p>
 
-<p class="code"><code>if (special_handled_condition) {
+<p><code><code>if (special_handled_condition) {
     log_condition();
     if (try_to_fix_situation())
         return SPECIAL_CONDITION_FIXED;
 }
 </code>
-<code>
-assert(special_handled_condition, "special condition could not be fixed");
+<code>assert(special_handled_condition, "special condition could not be fixed");
+</code>
 </code></p>
 
 <p>The call to <code>log_condition</code> is sometimes expected to fail. You need to decide
