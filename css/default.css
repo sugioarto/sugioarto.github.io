@@ -5,7 +5,7 @@ body {
 	font-family: 'Noto Sans', Sans-Serif;
 	margin: 0 0 0 0;
 	color: black;
-	font-size: 10.5pt;
+	font-size: 0.45cm;
 	background: white;
 }
 a {
@@ -50,7 +50,7 @@ div.head a {
 }
 h1,h2,h3,h4,h5,h6 {
 	font-family: 'Open Sans', Sans-Serif;
-	font-size: 10pt;
+	font-size: 0.45cm;
 	font-weight: normal;
 	text-align: left;
 	color: #024e66;
@@ -59,13 +59,13 @@ h1 a {
 	color: #484;
 }
 h1 {
-	font-size: 24pt;
+	font-size: 0.9cm;
 }
 h2 {
-	font-size: 20pt;
+	font-size: 0.75cm;
 }
 h3 {
-	font-size: 16pt;
+	font-size: 0.65cm;
 }
 ol,ul {
 	padding-left: 3ex;
@@ -96,19 +96,22 @@ div.sidebar {
 	padding-top: 180px;
 	margin-right: 10px;
 }
-div.nav {
-	font-weight: bold;
-	font-size: 14pt;
+div.sidebar ul li {
+	margin-bottom: 0.5cm;
 }
 div.sidebar ul, div.sidebar a {
 	list-style-type: none;
 	padding-left: 0.5ex;
-	font-size: 16pt;
+	font-size: 0.65cm;
 	font-weight: bold;
+}
+div.nav {
+	font-weight: bold;
+	font-size: 0.55cm;
 }
 div.footer {
 	font-weight: bold;
-	font-size: 14pt;
+	font-size: 0.55cm;
 	margin-top: 1em;
 }
 div.warning {
@@ -149,7 +152,7 @@ table.layout td {
 }
 table {
 	margin-top: 1em;
-	font-size: 12pt;
+	font-size: 0.5cm;
 	font-weight: normal;
 	border-collapse: collapse;
 }
