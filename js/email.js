@@ -11,6 +11,6 @@ function init()
 	var canvas = document.getElementById("insertaddy");
 	var ctx = canvas.getContext("2d");
 
-	ctx.font="10.5pt Droid Sans Mono";
+	ctx.font="16pt Droid Sans Mono";
 	ctx.fillText(t, 5, 15);
 }
