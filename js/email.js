@@ -12,5 +12,5 @@ function init()
 	var ctx = canvas.getContext("2d");
 
 	ctx.font="16pt Droid Sans Mono";
-	ctx.fillText(t, 5, 15);
+	ctx.fillText(t, 5, 19);
 }
