@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Sugioarto</title>
+	<meta charset="UTF-8" />
+	<link rel="stylesheet" type="text/css" href="../../../../css/default.css" />
+	<link rel="shortcut icon" type="image/png" href="../../../../img/favicon.png" />
+	<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-59952473-1', 'auto');ga('send', 'pageview');</script>
+	
+</head>
+
+<body>
+	<div class="sidebar">
+		<ul>
+			<li><a href="../../../../index.html">Main page</a></li>
+			<li><a href="../../../../projects/index.html">Projects</a></li>
+			<li><a href="../../../../contact/index.html">Contact</a></li>
+		</ul>
+	</div>
+
+	<a name="top"></a>
+	<div class="head"><div class="ornament"></div><h1>Sugioarto</h1></div>
+
+	<div class="as">
+		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+		<!-- Skyscraper -->
+		<ins class="adsbygoogle"
+			style="display:inline-block;width:300px;height:600px"
+			data-ad-client="ca-pub-6843164300322635"
+			data-ad-slot="5260616199"></ins>
+		<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+	</div>
+	<div class="main">
+		<noscript>
+			<div class="warning">
+			<h1>JavaScript is not enabled</h1>
+			<p>Please enable JavaScript for this webpage to make it function properly.</p>
+			</div>
+		</noscript>
+
+<div class="nav"><a href="../../../../articles/2015/03/03/making-small-drive-images.html">«&nbsp;Previous article</a></div>
+<div class="date">2015-08-21</div>
+<h1>Managing FreeBSD Jails Manually</h1>
+
+<p>If you are tired of using frameworks that complicate your server
+management and the implied restrictions that often are imposed to
+make everything seem easy-to-do, this is the right article for you
+as a <a href="https://www.freebsd.org/doc/handbook/jails.html">FreeBSD Jails</a> manager.
+
+<p>This article is an adaptation of the original <a href="https://www.freebsd.org/doc/handbook/jails-application.html">FreeBSD Handbook section about
+managing multiple jails</a>.
+It tidies up some directories and makes most things work out-of-the-box, so that
+you don't need to ask yourself why things don't work like you expect.</p>
+
+<p>It is assumed that you want to install all your jails in the directory
+<code>/jails</code>. You should also compile world which should match your jail host.
+The directory where the sources are is <code>/usr/src</code> here.</p>
+
+<h2>Disclaimer</h2>
+
+<p>Please watch your step! I don't want to be held responsible for
+damaged data or hosts or whatever. You need to understand parts
+of the jail concept and you need to know that jails look exactly
+like you main host. Deleting a directory on your main host or
+misconfigure it will upset you and your users.</p>
+
+<p><em>Think before typing</em> and check that I haven't done mistakes
+while writing this article.</p>
+
+<p>I repeat once again: these are very low-level operations and
+require an experienced administrator.</p>
+
+<h2>Remove old rootfs master</h2>
+
+<p>You can skip this procedure, when you have never installed any
+previous jails with the method described in this article.</p>
+
+<p>When updating the <code>mroot</code> tree, all jails need to be
+stopped and their filesystems need to be unmounted.
+It is not possible to update the jail's rootfs while it is running.</p>
+
+<p>The <code>mroot</code> is moved in a safe place, so you can restore it
+when the updated jail does not work instantly and people are
+impatient about service downtimes.</p>
+
+<p><code>cd /jails
+chflags -R 0 mroot.bak
+rm -rf mroot.bak
+mv mroot mroot.bak
+</code></p>
+
+<h2>Bootstrap rootfs master</h2>
+
+<p>In this section the <code>mroot</code> master rootfs is created.
+It is not used for a specific jail, but for all jails at
+same time, and for this reason, it
+should be kept equal for every jail which you will install on
+your system. <code>mroot</code> is big, but since it is needed only
+once for all you jail installations, the concept overall is
+very lightweight.</p>
+
+<p>This <code>mroot</code> will be mounted as a read-only <code>unionfs</code> in each jail.
+Inside this read-only jail rootfs, there is the special mountpoint
+<code>/s</code> which is used for writable files and configurations. The <code>mroot</code>
+is prepared here to point to <code>/s</code> using softlinks for every writable
+directory.</p>
+
+<p><code>cd /jails
+mkdir mroot
+cd /usr/src
+make installworld DESTDIR=/jails/mroot
+cd /jails/mroot
+rm -rf etc var boot
+rmdir root tmp
+mkdir s
+ln -s s/etc etc
+ln -s s/home home
+ln -s s/root root
+ln -s s/tmp tmp
+ln -s s/var var
+cd usr
+mkdir ports
+rmdir local obj
+ln -s ../s/usr-local local
+ln -s ../s/tmp/obj obj
+cd bin
+ln -s /usr/local/bin/perl perl
+</code></p>
+
+<h2>Remove old skel master</h2>
+
+<p>You can also skip this section, if you have never installed
+jails with the method described in this article.</p>
+
+<p><code>cd /jails
+rm -rf skel.bak
+mv skel skel.bak
+</code></p>
+
+<h2>Make a new skel master</h2>
+
+<p><code>skel</code> is the master copy for the contents of <code>/s</code>.
+You should make one for each jail that you want to use.</p>
+
+<p><code>skel</code> is not big, but you make copies of it for individual <code>/s</code> directories
+and since <code>/usr/local</code> of each jail is inside <code>/s</code>, it can get huge, if you
+install many ports there.</p>
+
+<p>Please notice that you need to replace the placeholder string <code>DNS-SERVER-IP</code> by
+your DNS server IP and <code>example.org</code> by a valid domain name that you want to
+use.</p>
+
+<p>Also please notice that the jail created from this template will make it
+start its own <code>sshd</code> (SSH daemon),
+which allows remote logins. Don't add it to <code>/etc/rc.conf</code>, if you
+don't like it. Most people might want it, though.</p>
+
+<p><code>cd /jails
+mkdir skel
+cd skel
+mergemaster -t /jails/skel/var/tmp/temproot -D /jails/skel -i
+rm -rf .cshrc .profile bin boot dev lib libexec media mnt proc rescue sbin sys usr
+mkdir usr-local home distfiles packages wrkdir tmp/obj
+echo 'sshd_enable="YES"' &gt;&gt; etc/rc.conf
+echo "domain example.org" &gt; etc/resolv.conf
+echo "nameserver DNS-SERVER-IP" &gt;&gt; etc/resolv.conf
+echo "IGNORE_FILES='.cshrc .profile COPYRIGHT /boot/device.hints'" &gt; etc/mergemaster.rc
+</code></p>
+
+<h2>Make a new jail</h2>
+
+<p>This is simple, if you understood the last section about <code>skel</code>.
+It is just needed to copy <code>skel</code> to a directory which you can
+mount to <code>/s</code> later when you mount your jail filesystem tree.</p>
+
+<p>I will call the jail <code>XXX</code> here, so you can easily see where it
+needs to be replaced in the commands you type.</p>
+
+<p>You need to copy the <code>skel</code> contents (which is a template for the
+writable jail contents) to <code>XXX-s</code>. Please don't mix it up with
+<code>XXX</code> here which is for the read-only rootfs and needs to stay empty for now.</p>
+
+<p><code>cd /jails
+cpdup skel XXX-s
+</code></p>
+
+<h2>Prepare jail filesystems</h2>
+
+<p>Perhaps you can see clearer how it is managed, when you look at
+the mount hierarchy for our new jail called <code>XXX</code>.</p>
+
+<p>We mount mroot (as told above) read-only in the specific jail
+rootfs. Then at its specific <code>/s</code> directory, we mount the
+writable contents that we copied from the template <code>skel</code>.</p>
+
+<p>We also need the ports tree from our jail host. It saves space
+to make an union mount, which is also read-only. Though, you
+will need some hacks in <code>/etc/make.conf</code> to make it work (see
+further below).</p>
+
+<p>We also add a <code>/usr/src</code> for the jail. You can also add it
+with "<code>noauto</code>", if you don't like it to have <code>/usr/src</code>
+always mounted in your jail.</p>
+
+<p>In <code>/etc/fstab</code>, add:</p>
+
+<p><code>/jails/mroot         /jails/XXX   nullfs  ro      0       0
+/jails/XXX-s         /jails/XXX/s nullfs  rw      0       0
+/usr/ports           /jails/XXX/usr/ports nullfs  ro      0       0
+/usr/src             /jails/XXX/usr/src   nullfs  ro      0       0
+</code></p>
+
+<h2>Mount jail filesystems</h2>
+
+<p>Since we don't want to restart the system, we mount the filesystem
+tree manually.</p>
+
+<p><code>mkdir /jails/XXX
+zfs create pool/jails/XXX-s
+mount /jails/XXX
+mount /jails/XXX/usr/ports
+cd /jails
+cpdup skel XXX-s
+mount /jails/XXX/s
+</code></p>
+
+<h2>Update a jail</h2>
+
+<p>In case you have not created a jail by copying <code>skel</code>,
+but updating it, you need to run <code>mergemaster</code> inside
+it to update your system configurations. Remember that
+<code>mroot</code> (rootfs) is now up-to-date, but the jail's configurations
+need to be updated, too.</p>
+
+<p>In case you decided to make your jail's <code>/usr/src</code> mounted
+<code>noauto</code>, you will need to <code>mount /jails/XXX/usr/src</code> first
+and after the procedure <code>umount /jails/XXX/usr/src</code> it again.</p>
+
+<p><code>jexec XXX tcsh
+mergemaster -iFU
+exit
+</code></p>
+
+<h2>Configurations for a new jail</h2>
+
+<h3>Example <code>/etc/make.conf</code></h3>
+
+<p>Make your settings. You will need the
+first 3 lines here to make FreeBSD ports work properly.
+This configuration needs to be adapted in each of
+your jails.</p>
+
+<p><code>DISTDIR=/s/distfiles
+WRKDIRPREFIX=/s/wrkdir
+PACKAGES=/s/packages
+WITH_PKGNG=yes
+MAKE_JOBS_NUMBER=3
+WITHOUT_X11=yes
+WITHOUT_GNOME=yes
+</code></p>
+
+<h3>Example <code>/etc/jail.conf</code></h3>
+
+<p>This is the configuration for the jail host which makes
+<code>/etc/rc.d/jail start XXX</code> work properly.</p>
+
+<p>Replace <code>JAIL-IFACE</code> with the jail network interface
+that the jail is going to be bound on.</p>
+
+<p>Replace <code>IP4-ADDRESS-OF-JAIL</code> with the IP4 address you
+would like to assign to the jail.</p>
+
+<p>You need to repeat the <code>XXX { ... }</code> section for
+every jail you have created.</p>
+
+<p><code><code>exec.start = "/bin/sh /etc/rc";
+exec.stop = "/bin/sh /etc/rc.shutdown";
+exec.clean;
+mount.devfs;
+mount.fdescfs;
+allow.sysvipc;
+path = "/jails/$name";
+interface = JAIL-IFACE;
+</code>
+<code>
+XXX {
+    host.hostname = "XXX.example.org";
+    ip4.addr = IP4-ADDRESS-OF-JAIL;
+    enforce_statfs = 1;
+}
+</code>
+</code></p>
+
+<h2>Jail startup</h2>
+
+<p>You can start your jail now.</p>
+
+<p><code>/etc/rc.d/jail start XXX
+</code></p>
+
+<h2>Final setup for new jails</h2>
+
+<p>In case you have just updated jails, you can skip this
+section.</p>
+
+<p>You should verify with <code>jls</code> that your jail is really running.
+Use the <code>JID</code> of the jail in the <code>jls</code> listing to enter a jail
+with root shell.</p>
+
+<p>Here, you setup the timezone, the root password and add your
+first user (usually you, and you would like to add yourself to
+the <code>wheel</code> group).</p>
+
+<p><code>jls
+jexec JID tcsh
+tzsetup
+passwd
+adduser
+</code></p>
+
+<h2>Summary</h2>
+
+<p>This guide shows how to setup a very lightweight FreeBSD jail
+with enhanced security, because of read-only rootfs.
+I have used this concept for years now and I am sure that it
+works very well (I checked it on FreeBSD-10.2).</p>
+
+<p>Email me mistakes, if you find any. There might be some and
+I hope they are not fatal.</p>
+
+		<div class="footer">» <a href="#top">Scroll back to top</a><a name="bottom"></a></div>
+	</div>
+</body>
+</html>
