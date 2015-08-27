@@ -224,23 +224,6 @@ cpdup skel XXX-s
 mount /jails/XXX/s
 </code></p>
 
-<h2>Update a jail</h2>
-
-<p>In case you have not created a jail by copying <code>skel</code>,
-but updating it, you need to run <code>mergemaster</code> inside
-it to update your system configurations. Remember that
-<code>mroot</code> (rootfs) is now up-to-date, but the jail's configurations
-need to be updated, too.</p>
-
-<p>In case you decided to make your jail's <code>/usr/src</code> mounted
-<code>noauto</code>, you will need to <code>mount /jails/XXX/usr/src</code> first
-and after the procedure <code>umount /jails/XXX/usr/src</code> it again.</p>
-
-<p><code>jexec XXX tcsh
-mergemaster -iFU
-exit
-</code></p>
-
 <h2>Configurations for a new jail</h2>
 
 <h3>Example <code>/etc/make.conf</code></h3>
@@ -296,6 +279,24 @@ XXX {
 <p>You can start your jail now.</p>
 
 <p><code>/etc/rc.d/jail start XXX
+</code></p>
+
+<h2>Update a jail</h2>
+
+<p>In case you have not created a jail by copying <code>skel</code>,
+but updating it, you need to run <code>mergemaster</code> inside
+it to update your system configurations. Remember that
+<code>mroot</code> (rootfs) is now up-to-date, but the jail's configurations
+need to be updated, too. You also need to took a bit
+ahead and start the jail.</p>
+
+<p>In case you decided to make your jail's <code>/usr/src</code> mounted
+<code>noauto</code>, you will need to <code>mount /jails/XXX/usr/src</code> first
+and after the procedure <code>umount /jails/XXX/usr/src</code> it again.</p>
+
+<p><code>jexec XXX tcsh
+mergemaster -iFU
+exit
 </code></p>
 
 <h2>Final setup for new jails</h2>
