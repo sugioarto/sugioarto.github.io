@@ -170,8 +170,8 @@ code {
 	font-family: 'Droid Sans Mono', monospace, fixed;
 	font-weight: normal;
 	white-space: pre;
-	font-size: 0.45cm;
+	font-size: 0.35cm;
 	display: inline-block;
-	background-color: #d0f0fc;
+	background-color: #ffffd0;
 	padding: 0.2em 1ex 0.2em 1ex;
 }
