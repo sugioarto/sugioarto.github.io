@@ -136,11 +136,6 @@ div.as {
 	margin-left: 3ex;
 	float: right;
 }
-pre {
-	font-family: 'Droid Sans Mono', monospace, fixed;
-	font-weight: normal;
-	background-color: #ddd;
-}
 table.layout {
 	padding: 0;
 }
@@ -166,11 +161,17 @@ td {
 	padding: 0.5em;
 	background-color: #dfd;
 }
+pre, code, kbd, samp, tt {
+	font-family:monospace,monospace;
+	font-size:0.85em;
+}
+pre {
+	font-weight: normal;
+	background-color: #ddd;
+}
 code {
-	font-family: 'Droid Sans Mono', monospace, fixed;
 	font-weight: normal;
 	white-space: pre;
-	font-size: 0.35cm;
 	display: inline-block;
 	background-color: #ffffd0;
 	padding: 0.2em 1ex 0.2em 1ex;
