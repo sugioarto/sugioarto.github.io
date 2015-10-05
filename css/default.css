@@ -162,8 +162,8 @@ td {
 	background-color: #dfd;
 }
 pre, code, kbd, samp, tt {
-	font-family:monospace,monospace;
-	font-size:0.85em;
+	font-family: "Corieur Nevv", monospace, serif;
+	font-size: 1em;
 }
 pre {
 	font-weight: normal;
