@@ -1,0 +1,16 @@
+
+pre, code, kbd, samp {
+	font-family: 'Droid Sans Mono';
+	font-size: 130%;
+}
+p code {
+	margin-left: 0.5em;
+	margin-right: 0.5em;
+}
+p code code {
+	white-space: pre;
+	display: block;
+	background-color: #ffffd0;
+	color: #004000;
+	padding: 0.2em 1ex 0.2em 1ex;
+}

@@ -161,18 +161,18 @@ td {
 	padding: 0.5em;
 	background-color: #dfd;
 }
-pre, code, kbd, samp, tt {
-	font-family: "Corieur Nevv", monospace, serif;
-	font-size: 1em;
+pre, code, kbd, samp {
+	font-family: 'Droid Sans Mono';
+	font-size: 90%;
 }
-pre {
-	font-weight: normal;
-	background-color: #ddd;
+p code {
+	margin-left: 0.5em;
+	margin-right: 0.5em;
 }
-code {
-	font-weight: normal;
+p code code {
 	white-space: pre;
-	display: inline-block;
+	display: block;
 	background-color: #ffffd0;
+	color: #004000;
 	padding: 0.2em 1ex 0.2em 1ex;
 }

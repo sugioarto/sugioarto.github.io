@@ -4,6 +4,7 @@
 	<title>Sugioarto</title>
 	<meta charset="UTF-8" />
 	<link rel="stylesheet" type="text/css" href="../../../../css/default.css" />
+	<link rel="stylesheet" type="text/css" href="../../../../css/mobile.css" media="handheld" />
 	<link rel="shortcut icon" type="image/png" href="../../../../img/favicon.png" />
 	<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-59952473-1', 'auto');ga('send', 'pageview');</script>
 	
@@ -56,14 +57,14 @@ you don't need.</p>
 
 <p>Then execute a command similar like this:</p>
 
-<p><code>dd if=/dev/zero of=/zerofile bs=65536
-</code></p>
+<p><code><code>dd if=/dev/zero of=/zerofile bs=65536
+</code></code></p>
 
 <p>The command above will make the rootfs full with zeroes. This can take a while
 (it depends on how large your rootfs is). The erase it again:</p>
 
-<p><code>rm /zerofile
-</code></p>
+<p><code><code>rm /zerofile
+</code></code></p>
 
 <p>Do this on <em>all</em> filesystems that belong to the harddrive which you want to do
 a <code>dd</code> of. You can find out which filesystems you need to fill with such a
@@ -72,52 +73,62 @@ i<code>zerofile</code> using the command <code>mount</code>.</p>
 <p>In case you are on Microsoft Windows, you can use this Java program to
 write a <code>zerofile</code> to your drive:</p>
 
-<div><code>import java.io.*;
-
+<p><code><code>import java.io.*;
+</code>
+<code>
 public class NullWriter {
-
+</code>
+<code>
     public static void main(String[] arg) {
-
+</code>
+<code>
         if (arg.length == 1) write(arg[0]);
         else {
             System.out.println("java NullWriter FILENAME");
         }
-
+</code>
+<code>
         System.exit(0);
     }
-
+</code>
+<code>
     public static void write(String filename) {
-
+</code>
+<code>
         byte[] buf=new byte[1024*1024];
-        for (int i = 0; i &lt; buf.length; i++) buf[i]=0;
-
+        for (int i = 0; i &amp;lt; buf.length; i++) buf[i]=0;
+</code>
+<code>
         FileOutputStream fos = null;
         try {
             fos= new FileOutputStream(filename);
-
+</code>
+<code>
             while (true) {
                 fos.write(buf);
             }
-
+</code>
+<code>
         } catch (IOException ex) {
-
+</code>
+<code>
             try {
                 if (fos != null) fos.close();
             } catch (IOException exx) {}
         }
     }
 }
-</code></div>
+</code></code></p>
 
 <p>Compile it with:</p>
 
-<p><code>javac NullWriter.java
-</code></p>
+<p><code><code>javac NullWriter.java
+</code></code></p>
 
 <p>Run it like this:</p>
 
-<p><code>java NullWriter c:\zerofile
-</code></p>
+<p><code><code>java NullWriter c:\zerofile
+</code></code></p>
 
 <p>If you have more than only drive <code>C:</code> on your harddrive, write on the
 other drives, too. Here you should also erase the file again after the
@@ -132,13 +143,13 @@ You should use a Linux live filesystem for this step.</p>
 mounted on /mnt/second-hdd and the drive you want
 to make an image of is /dev/sda; you need to be <code>root</code>):</p>
 
-<p><code>dd if=/dev/sda bs=65536 | gzip -c &gt; /mnt/second-hdd/sda-image.img
-</code></p>
+<p><code><code>dd if=/dev/sda bs=65536 | gzip -c &gt; /mnt/second-hdd/sda-image.img
+</code></code></p>
 
 <p>Or pipe it over SSH to some other remote host:</p>
 
-<p><code>dd if=/dev/sda bs=65536 | gzip -c | ssh myremoteuser@remotehost 'cat - &gt; sda-image.img'
-</code></p>
+<p><code><code>dd if=/dev/sda bs=65536 | gzip -c | ssh myremoteuser@remotehost 'cat - &gt; sda-image.img'
+</code></code></p>
 
 <p>It does not matter what system is installed on the drive. It will be a full
 image and because you wrote a lot of zeroes into the free space, <code>gzip</code> will
@@ -154,8 +165,8 @@ very sad, if you lose data.</p>
 
 <p>It is a good idea to test if the image can be uncompressed at least:</p>
 
-<p><code>gunzip -c sda-image.img &gt; /dev/null
-</code></p>
+<p><code><code>gunzip -c sda-image.img &gt; /dev/null
+</code></code></p>
 
 <p>If you see an error, something is wrong. The command also takes a lot of time.</p>
 
@@ -177,13 +188,13 @@ I just warned you that you could destroy data in the following step, right?</p>
 <p>Write an image back to the drive from a second mounted harddrive in
 directory <code>/mnt/second-hdd</code>:</p>
 
-<p><code>gunzip -c /mnt/second-hdd/sda-image.img | dd of=/dev/sda bs=4096
-</code></p>
+<p><code><code>gunzip -c /mnt/second-hdd/sda-image.img | dd of=/dev/sda bs=4096
+</code></code></p>
 
 <p>Or back from a remote host using SSH:</p>
 
-<p><code>ssh myremoteuser@remotehost 'cat sda-image.img' | gunzip -c | dd of=/dev/sda bs=4096
-</code></p>
+<p><code><code>ssh myremoteuser@remotehost 'cat sda-image.img' | gunzip -c | dd of=/dev/sda bs=4096
+</code></code></p>
 
 <h2>That's it!</h2>
 
