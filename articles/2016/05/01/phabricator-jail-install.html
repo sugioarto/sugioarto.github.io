@@ -57,7 +57,8 @@ need an IP address and a host name for the web server.</p>
 <p><code><code>cd /usr/ports/ports-mgmt/portmaster
 make install clean
 rehash
-portmaster -d sysutils/tmux</code></code></p>
+portmaster -d sysutils/tmux
+portmaster -d devel/git</code></code></p>
 <h2>Set up mail server</h2>
 <p>This is optional, but Phabricator needs to send emails, a lot of them...</p>
 <p>You can set up the jail to forward system emails to your main host. This
@@ -89,10 +90,32 @@ in <code>mysql</code> client to allow connections:</p>
 mariadb-prompt# grant all privileges on *.* to root@'192.168.1.5'
     identified by 'YOUR-MARIADB-ROOT-PASSWORD' with grant option;</code></code></p>
 <h2>Install Phabricator</h2>
-<p><code><code>portmaster -d devel/phabricator</code></code></p>
-<h3>PHP gd</h3>
-<p>It seems, the dependencies don't include <code>gd</code>, you will need it:</p>
-<p><code><code>portmaster -d graphics/php56-gd</code></code></p>
+<p><strong>Do not install Phabricator from the ports collection!</strong></p>
+<p>Instead install the software directly from Github. Note that this is the only
+recommended and supported way to install Phabricator.</p>
+<p><code><code>mkdir -p /usr/local/lib/php
+cd /usr/local/lib/php
+git clone https://github.com/phacility/libphutil.git
+git clone https://github.com/phacility/phabricator.git
+git clone https://github.com/phacility/arcanist.git</code></code></p>
+<p>Usually, you would not like to run <code>HEAD</code> on a production server, so
+it's better to checkout the stable branch in the repositories.</p>
+<p><code><code>cd /usr/local/lib/php/libphutil
+git checkout stable
+cd ../phabricator
+git checkout stable
+cd ../arcanist
+git checkout stable</code></code></p>
+<h3>PHP</h3>
+<p>Phabricator needs PHP and some additional modules. Install them.
+Note that the current recommended PHP version may change after some time.
+Here, PHP 5.6 is used.</p>
+<p><code><code>portmaster -d lang/php56 textproc/php56-ctype ftp/php56-curl textproc/php56-dom
+  sysutils/php56-fileinfo security/php56-filter graphics/php56-gd
+  security/php56-hash converters/php56-iconv devel/php56-json
+  converters/php56-mbstring databases/php56-mysql www/php56-opcache
+  security/php56-openssl devel/php56-pcntl sysutils/php56-posix
+  textproc/php56-simplexml textproc/php56-xml</code></code></p>
 <h2>Setup PHP-FPM</h2>
 <p>In <code>/usr/local/etc/php-fpm.conf</code> update these settings:</p>
 <p><code><code>listen = /tmp/fcgiwrap.socket
@@ -277,6 +300,8 @@ problems.</p>
 <p><code><code>phabricator_sshd_enable="YES"
 phabricator_phd_enable="YES"
 phabricator_aphlict_enable="YES"</code></code></p>
+<h2>Handle upgrades</h2>
+<p>Read <a href="../../../2015/09/27/phabricator-upgrade.html">this article</a>.</p>
 		<div class="footer">» <a href="#top">Scroll back to top</a><a name="bottom"></a></div>
 	</div>
 </body>
