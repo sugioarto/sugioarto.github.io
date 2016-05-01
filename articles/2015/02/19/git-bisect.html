@@ -42,28 +42,22 @@
 <div class="nav"><a href="../../../../articles/2015/02/16/assertions-and-fault-tolerance.html">«&nbsp;Previous article</a></div>
 <div class="date">2015-02-19</div>
 <h1>Git Bisect Fails</h1>
-
 <p><code>git bisect</code> is a nice <a href="http://git-scm.com/">Git</a> tool to narrow down a bug to
 a single commit in logarithmic number of steps. After giving this tool an upper
 bound (for first known broken commit) and the lower bound (for last known
 working commit) you can move quickly and divide the commit set in two halfs.
 The next step will decide if the commit that breaks a feature is in the upper
 half or the lower one.
-
 <h2>Determinism</h2>
-
 <p><code>git bisect</code> works well, when you can reproduce the failure
 deterministically. It means that you need to know instantly
 if something works or not, for example by have a fixed
 procedure to make a test, even when you have to do it manually.</p>
-
 <h2>Non-determinism and probability</h2>
-
 <p>The tool is not going to work well when there is a chance
 that your test lies about if something works or not. Once you
 end up in the wrong half, you will not find the commit, but
 a totally irrelevant commit.</p>
-
 <p>This is a totally annoying situation and you will find
 failures for same commits that you considered safe to use
 in earlier runs. But you will notice it far later when you
@@ -72,9 +66,7 @@ usually hard to produce an overlapping <code>bisect</code> run in
 this situation. It can drive you crazy when you find out
 that in the end also the latest commit is sometimes without
 the bug that you are looking for.</p>
-
 <h2>Stateful failures</h2>
-
 <p>One of the worst kinds of failures are those which save
 a state somewhere and you don't notice it. Beginning with
 this commit, you often get bad commits and at the end of
@@ -87,23 +79,18 @@ bad luck you will hit a commit that resets the state.
 And in this case, again, you get commits that are good
 that have been considered bad before, mostly after
 one full run that turned up nothing valueable.</p>
-
 <h2>Conclusion</h2>
-
 <p>Analyze the character of the bug. This is not always easy and
 sometimes not possible, but think about it if the bug can
 be non-deterministic or stateful.</p>
-
 <p>When you notice something strange about a <code>bisect</code> run, try
 to look at what you search for and compare it to the log entries.
 Also go directly for the extremum and check from time to time
 if you would end up at the top or bottom commit. It saves
 time in these weird cases.</p>
-
 <p>And finally, stop looking for such kind of bugs with <code>git bisect</code>
 as soon as possible, because it is a huge waste of time. Look
 for other ways how to reproduce them more reliably.</p>
-
 		<div class="footer">» <a href="#top">Scroll back to top</a><a name="bottom"></a></div>
 	</div>
 </body>
