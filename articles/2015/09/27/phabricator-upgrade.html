@@ -42,55 +42,90 @@
 <div class="nav"><a href="../../../../articles/2015/08/21/managing-freebsd-jails.html">«&nbsp;Previous article</a></div>
 <div class="date">2015-09-27</div>
 <h1>Upgrade Phabricator</h1>
+
 <p><a href="http://www.phabricator.org/">Phabricator</a> is a great project
 management application. It is also easy to upgrade and this
 is very important for administrators. I wrote down some steps
 how to update Phabricator.
+
 <p>Phabricator needs to be installed from the distribution to work correctly.
 Do not install it from <a href="http://www.freebsd.org/">FreeBSD</a> ports or packages.</p>
+
 <h2>Stop everything</h2>
+
 <p>If you have <code>nginx</code>, stop it instead of Apache. I assume that
 you are running <code>aphlict</code> with user <code>phd</code>. If not, adjust the
 command below accordingly. You need to stop <code>php-fpm</code>, too, in
 case you run it for your webserver.</p>
-<p><code><code># /usr/local/lib/php/phabricator/bin/phd stop</code>
-<code># /usr/local/etc/rc.d/apache24 stop</code>
-<code># sudo -u phd /usr/local/lib/php/phabricator/bin/aphlict stop</code>
+
+<p><code><code># /usr/local/lib/php/phabricator/bin/phd stop
+</code>
+<code># /usr/local/etc/rc.d/apache24 stop
+</code>
+<code># sudo -u phd /usr/local/lib/php/phabricator/bin/aphlict stop
+</code>
 </code></p>
+
 <h2>Upgrade Ports</h2>
+
 <p>It makes sense to upgrade the entire packages before
 going on.</p>
-<p><code># portmaster -ad</code></p>
-<h2>Update Phabricator Installation</h2>
-<p><code><code># cd /usr/local/lib/php/libphutil</code>
-<code># git pull</code>
-<code># cd /usr/local/lib/php/arcanist</code>
-<code># git pull</code>
-<code># cd /usr/local/lib/php/phabricator</code>
-<code># git pull</code>
+
+<p><code># portmaster -ad
 </code></p>
+
+<h2>Update Phabricator Installation</h2>
+
+<p><code><code># cd /usr/local/lib/php/libphutil
+</code>
+<code># git pull
+</code>
+<code># cd /usr/local/lib/php/arcanist
+</code>
+<code># git pull
+</code>
+<code># cd /usr/local/lib/php/phabricator
+</code>
+<code># git pull
+</code>
+</code></p>
+
 <p>Make sure you are on the <code>stable</code> branch in each of the
 repositories above.</p>
+
 <h3>Aphlict dependencies update</h3>
+
 <p>Aphlict has the package <code>ws</code> installed in directory
 <code>/usr/local/lib/php/phabricator/support/aphlict/server/</code>.
 You will want to update it, too, if you run node for notifications.</p>
+
 <h2>Upgrade Database Schema</h2>
+
 <p>For Phabricator to run properly, you need to update
 the database schema.</p>
-<p><code># /usr/local/lib/php/phabricator/bin/storage upgrade</code></p>
+
+<p><code># /usr/local/lib/php/phabricator/bin/storage upgrade
+</code></p>
+
 <p>Answer any questions that may appear. Mostly just "yes" is enough.
 You can re-run the command above to be sure everything has been
 upgraded properly.</p>
+
 <h2>Start Everything Again</h2>
+
 <p>If you run <code>php-fpm</code>, start it first.
 If you have <code>nginx</code>, start it instead of Apache. I assume that
 you are running <code>aphlict</code> with user <code>phd</code>. If not, adjust the
 command below accordingly.</p>
-<p><code><code># /usr/local/etc/rc.d/apache24 start</code>
-<code># /usr/local/lib/php/phabricator/bin/phd start</code>
-<code># sudo -u phd /usr/local/lib/php/phabricator/bin/aphlict start</code>
+
+<p><code><code># /usr/local/etc/rc.d/apache24 start
+</code>
+<code># /usr/local/lib/php/phabricator/bin/phd start
+</code>
+<code># sudo -u phd /usr/local/lib/php/phabricator/bin/aphlict start
+</code>
 </code></p>
+
 		<div class="footer">» <a href="#top">Scroll back to top</a><a name="bottom"></a></div>
 	</div>
 </body>

@@ -42,39 +42,52 @@
 <div class="nav"><a href="../../../../articles/2015/02/14/welcome.html">«&nbsp;Previous article</a></div>
 <div class="date">2015-02-16</div>
 <h1>Assertions and Fault Tolerance</h1>
+
 <p>The quest for software quality is important and bugs are something that you can
 expect in code, but are unexpected when encountered during runtime, because
 they are simply not handled.  Here are some thoughts about software design that
 I encountered during doing my daily job improving software quality.</p>
 
+
 <h2>The Case For Assertions</h2>
+
 <p>I usually use <a href="https://en.wikipedia.org/wiki/Assertion_%28software_development%29">assertions</a>
 a lot to quickly find bugs in software by inspecting invariants, pre- and postconditions. This works
 well and makes projects more stable and robust. While crashing obiously and
 visibly, it leads to improvement and reduction of such situations in the long
 run.</p>
+
 <p>Assertions are simple like this:</p>
-<p><code><code>assert(condition_that_has_to_hold, "message to output when it does not hold");</code></code></p>
+
+<p><code><code>assert(condition_that_has_to_hold, "message to output when it does not hold");
+</code></code></p>
+
 <p>Usually assertions are implemented in a way in which they can be removed
 from production code. While this is ok to allow, it is generally a bad idea
 for common software. A typical assertion notice that is in production
 code are the famous <a href="https://en.wikipedia.org/wiki/Blue_Screen_of_Death">blue screen of death</a>
 and other kinds of <a href="https://en.wikipedia.org/wiki/Kernel_panic">kernel panics</a>.</p>
+
 <h2>Assertions Are <em>NOT</em> Exceptions</h2>
+
 <p>Many people confuse an assertion with an <a href="https://en.wikipedia.org/wiki/Exception_handling">exception</a>.
 An exception is not a fatal situation and especially it does not mean that the
 program has a bug. An exception is to be handled and the program can be running
 again.</p>
+
 <p>When a program hits an assertion, it is obvious that it does not make any sense
 to keep it running, because something fatal happened and it will never reach
 any reasonable state to keep operating. For example it is to expect that a
 side-effect will remain in the program and it won't work, even after
 repeating a procedure, it can behave wrong in all possible routines. That said,
 it is important the the system is resetted and put in a clean state.</p>
+
 <h2>Exceptions, Like Assertions, Are <em>Unexpected</em></h2>
+
 <p>Many people throw exceptions for obvious and expectable things, or, even worse,
 they control the regular (non-exceptional) program flow using them. Both uses
 are wrong.</p>
+
 <p>For example, it is expected that a file has an end somewhere. You do not need
 to throw an exception here, because this is quite obvious that a file will have
 an end (eventually). It is rather exceptional, if it does not have an end,
@@ -82,6 +95,7 @@ which can happen, if it is circular due to a filesystem inconsistency or,
 perhaps, an exotic filesystem (that I have not seen, yet). So the test for EOF
 (end-of-file) should never signal the EOF condition with an exception, but with
 a return value.</p>
+
 <p>I have seen people programming <a href="https://en.wikipedia.org/wiki/Recursion_%28computer_science%29">a recursive function</a>
 that does not let an exception unhandled, but uses it to signal special cases
 which it returns results with. This is a typical case for using exceptions for
@@ -89,49 +103,66 @@ controlling program flow. When a valid and expected result of a method or
 function is an exception, it is not a good idea (in most cases) to use
 exceptions, but simply return a special value. Also in many languages
 exceptions are slow, so do not make your routines unnecessarily slow.</p>
+
 <h2>Assertions Are <em>NOT</em> to Be Used For Fault Tolerance</h2>
+
 <p>Assertions are not <a href="https://en.wikipedia.org/wiki/Fault_tolerance">fault tolerant</a>.
 And it is OK. Assertions should reset the system and a fault tolerant system
 <em>must</em> be aware that a reset of a component or the entire system happened.
 Fault tolerance is planned and it is <em>expected</em> that a part of a program can
 have a valid result marking a fault of a component.</p>
+
 <p>Assertions are something different. Assertions are used for bugs, that means
 for cases when the program encounters an unspecified behavior. Bugs are never
 expected, because they are cases which the program, even they are allowed
 does not handle correctly. Fault tolerance is the mechanism to handle eventual
 specified and well-known bad behavior that is <em>not</em> a bug.</p>
+
 <p>In recent past I have seen code like this:</p>
+
 <p><code><code>if (!condition_that_has_to_hold) {
     assert(false, "message to output when it does not hold");
     return;
-}</code></code></p>
+}
+</code></code></p>
+
 <p>What is happening here? It is usually some code that is used to check
 <a href="https://en.wikipedia.org/wiki/Precondition">preconditions</a> and trying to
 fail "safely" from a fatal condition.</p>
+
 <p>Remember, assertions are used for fatal and irreparable situations and this
 is code that safely returns from this fatal situation introducing many
 problems in various places later on, which you cannot foresee as a programmer.</p>
+
 <p>Such code tries to combine fault tolerance with bug discovery. It seems
 allright at a first glance, but fault tolerance is only useful when the
 program can return to a state in which it operates safely and bug-free.
 A triggered assertion signals a bug and you would be lying to yourself
 to try to recover from a bug that you have not handled. Be aware that
 this is not fault tolerance but <em>hiding a bug</em> (or "masking" it).</p>
+
 <p>A proper approach is to separate these two different aspects. It might look
 like this:</p>
+
 <p><code><code>if (special_handled_condition) {
     log_condition();
     if (try_to_fix_situation())
         return SPECIAL_CONDITION_FIXED;
-}</code>
-<code>assert(special_handled_condition, "special condition could not be fixed");</code></code></p>
+}
+</code>
+<code>
+assert(special_handled_condition, "special condition could not be fixed");
+</code></code></p>
+
 <p>The call to <code>log_condition</code> is sometimes expected to fail. You need to decide
 yourself, if logging (which is still useful here) is still possible or
 it is not. If it is not, it is better to place the <code>log_condition</code> call
 in the <code>if</code> statement branch right before the code returns.</p>
+
 <p>Also note that after fixing the situation it might be ok to carry on with
 the procedure instead of returning. You need to decide yourself what is
 reasonable and what is not for your particular case.</p>
+
 		<div class="footer">» <a href="#top">Scroll back to top</a><a name="bottom"></a></div>
 	</div>
 </body>

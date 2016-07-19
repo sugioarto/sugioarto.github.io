@@ -42,217 +42,406 @@
 <div class="nav"><a href="../../../../articles/2015/10/02/custom-unit-tests-phabricator.html">«&nbsp;Previous article</a></div>
 <div class="date">2016-05-01</div>
 <h1>Installing Phabricator in a FreeBSD Jail</h1>
+
 <p>I have written about <a href="http://www.phabricator.org">Phabricator</a> already and how
 useful it is for software development.  In this post, I want to help with the
 installation of this project management tool.</p>
+
 <p>These setup instructions apply to a typical setup that is done in
 <a href="https://www.freebsd.org/doc/handbook/jails.html">FreeBSD jails</a>.  And I would
 not recommend to install it on a bare host, because it takes control of a full
 MariaDB installation that you might also want for other purposes, but you
 can't.</p>
 
+
 <p>You need to make some preparations to install Phabricator. You will
 need an IP address and a host name for the web server.</p>
+
 <h2>Install Tools</h2>
-<p><code><code>cd /usr/ports/ports-mgmt/portmaster
+
+<p><code><code>
+cd /usr/ports/ports-mgmt/portmaster
 make install clean
 rehash
 portmaster -d sysutils/tmux
-portmaster -d devel/git</code></code></p>
+portmaster -d devel/git
+</code></code></p>
+
 <h2>Set up mail server</h2>
+
 <p>This is optional, but Phabricator needs to send emails, a lot of them...</p>
+
 <p>You can set up the jail to forward system emails to your main host. This
 is simply done by setting up <code>sendmail</code>:</p>
-<p><code><code>cd /etc/mail
-make all</code></code></p>
+
+<p><code><code>
+cd /etc/mail
+make all
+</code></code></p>
+
 <p>Now edit <code>your-hostname.domain.tld.mc</code>, insert a line like, where
 <code>YOUR-JAIL-HOST-IP</code> is the IP where you want to forward your
 emails to. Of course this host needs to run an MTA.</p>
-<p><code><code>define(`SMART_HOST', `[YOUR-JAIL-HOST-IP]')</code></code></p>
+
+<p><code><code>
+define(`SMART_HOST', `[YOUR-JAIL-HOST-IP]')
+</code></code></p>
+
 <h2>Install MariaDB</h2>
-<p><code><code>portmaster -d databases/mariadb100-server</code></code></p>
+
+<p><code><code>
+portmaster -d databases/mariadb100-server
+</code></code></p>
+
 <ul>
 <li>select <code>INNODB</code> for <code>mariadb100-server</code></li>
 <li>select <code>PYGMENTS</code> for py27-docutils</li>
 </ul>
+
 <h3>Setup</h3>
+
 <p>You will need to insert this line into your <code>/etc/rc.conf</code>
-<code><code>mysql_enable="YES"</code></code></p>
+<code><code>
+mysql_enable="YES"
+</code></code></p>
+
 <p>Then start MariaDB with:
-<code><code>/usr/local/etc/rc.d/mysql-server start</code></code></p>
+<code><code>
+/usr/local/etc/rc.d/mysql-server start
+</code></code></p>
+
 <p>Secure your database with the following procedure:</p>
-<p><code><code>mysql_secure_installation</code></code></p>
+
+<p><code><code>
+mysql_secure_installation
+</code></code></p>
+
 <p>Choose a secure password for root access and follow the standard
 procedure otherwise.</p>
+
 <p>In case you have removed remote access, you can use this command
 in <code>mysql</code> client to allow connections:</p>
-<p><code><code>mysql -u root -p
+
+<p><code><code>
+mysql -u root -p
 mariadb-prompt# grant all privileges on *.* to root@'192.168.1.5'
-    identified by 'YOUR-MARIADB-ROOT-PASSWORD' with grant option;</code></code></p>
+    identified by 'YOUR-MARIADB-ROOT-PASSWORD' with grant option;
+</code></code></p>
+
 <h2>Install Phabricator</h2>
+
 <p><strong>Do not install Phabricator from the ports collection!</strong></p>
+
 <p>Instead install the software directly from Github. Note that this is the only
 recommended and supported way to install Phabricator.</p>
-<p><code><code>mkdir -p /usr/local/lib/php
+
+<p><code><code>
+mkdir -p /usr/local/lib/php
 cd /usr/local/lib/php
 git clone https://github.com/phacility/libphutil.git
 git clone https://github.com/phacility/phabricator.git
-git clone https://github.com/phacility/arcanist.git</code></code></p>
+git clone https://github.com/phacility/arcanist.git
+</code></code></p>
+
 <p>Usually, you would not like to run <code>HEAD</code> on a production server, so
 it's better to checkout the stable branch in the repositories.</p>
-<p><code><code>cd /usr/local/lib/php/libphutil
+
+<p><code><code>
+cd /usr/local/lib/php/libphutil
 git checkout stable
 cd ../phabricator
 git checkout stable
 cd ../arcanist
-git checkout stable</code></code></p>
+git checkout stable
+</code></code></p>
+
 <h3>PHP</h3>
+
 <p>Phabricator needs PHP and some additional modules. Install them.
 Note that the current recommended PHP version may change after some time.
 Here, PHP 5.6 is used.</p>
-<p><code><code>portmaster -d lang/php56 textproc/php56-ctype ftp/php56-curl textproc/php56-dom
+
+<p><code><code>
+portmaster -d lang/php56 textproc/php56-ctype ftp/php56-curl textproc/php56-dom
   sysutils/php56-fileinfo security/php56-filter graphics/php56-gd
   security/php56-hash converters/php56-iconv devel/php56-json
   converters/php56-mbstring databases/php56-mysql www/php56-opcache
   security/php56-openssl devel/php56-pcntl sysutils/php56-posix
-  textproc/php56-simplexml textproc/php56-xml</code></code></p>
+  textproc/php56-simplexml textproc/php56-xml
+</code></code></p>
+
 <h2>Setup PHP-FPM</h2>
+
 <p>In <code>/usr/local/etc/php-fpm.conf</code> update these settings:</p>
-<p><code><code>listen = /tmp/fcgiwrap.socket
+
+<p><code><code>
+listen = /tmp/fcgiwrap.socket
 listen.owner = www
 listen.group = www
-listen.mode = 0660</code></code></p>
+listen.mode = 0660
+</code></code></p>
+
 <p>You will need to insert this line into your <code>/etc/rc.conf</code>
-<code><code>php_fpm_enable="YES"</code></code></p>
+<code><code>
+php_fpm_enable="YES"
+</code></code></p>
+
 <p>Then start nginx with:
-<code><code>/usr/local/etc/rc.d/php-fpm start</code></code></p>
+<code><code>
+/usr/local/etc/rc.d/php-fpm start
+</code></code></p>
+
 <h2>Install nginx</h2>
-<p><code><code>portmaster -d www/nginx</code></code></p>
+
+<p><code><code>
+portmaster -d www/nginx
+</code></code></p>
+
 <h3>Setup</h3>
+
 <p>Take a look at the
 <a href="https://secure.phabricator.com/book/phabricator/article/configuration_guide/#webserver-configuring-ng">Phabricator setup for nginx</a>
 in the docs.</p>
+
 <p>The web root directory on FreeBSD is <code>/usr/local/lib/php/phabricator/webroot</code>.
 This is to be setup for the parameter <code>root</code>.</p>
+
 <p>The <code>/usr/local/etc/nginx/nginx.conf</code> basically boils down to:
-<code><code>http {
-    ...</code>
-<code>client_max_body_size 64M;</code>
-<code>...</code>
-<code>server {</code>
-<code>...</code>
-<code>location / {
+<code><code>
+http {
+    ...
+</code>
+<code>
+    client_max_body_size 64M;
+</code>
+<code>
+    ...
+</code>
+<code>
+    server {
+</code>
+<code>
+        ...
+</code>
+<code>
+        location / {
             root   /usr/local/lib/php/phabricator/webroot;
             index  index.php;
             rewrite ^/(.*)$ /index.php?__path__=/$1 last;
-        }</code>
-<code>...</code>
-<code>location /index.php {
+        }
+</code>
+<code>
+        ...
+</code>
+<code>
+        location /index.php {
             root   /usr/local/lib/php/phabricator/webroot;
             fastcgi_pass   unix:/tmp/fcgiwrap.socket;
             include /usr/local/etc/nginx/fastcgi_params;
             fastcgi_index   index.php;
             fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
-        }</code>
-<code>...</code>
-<code>}</code></code></p>
+        }
+</code>
+<code>
+        ...
+</code>
+<code>
+    }
+</code></code></p>
+
 <p>You will need to insert this line into your <code>/etc/rc.conf</code>
-<code><code>nginx_enable="YES"</code></code></p>
+<code><code>
+nginx_enable="YES"
+</code></code></p>
+
 <p>Then start nginx with:
-<code><code>/usr/local/etc/rc.d/nginx start</code></code></p>
+<code><code>
+/usr/local/etc/rc.d/nginx start
+</code></code></p>
+
 <h2>Use the Phabricator Guide</h2>
+
 <p>The rest of the setup process is done best with the Phabricator application
 itself. Start up your web browser and enter the web URL that you have set up.</p>
+
 <h3>Configure Database Settings</h3>
+
 <p>Phabricator will ask you to configure MariaDB access:</p>
-<p><code><code>/usr/local/lib/php/phabricator/bin/config set mysql.host YOUR-JAIL-IP
-/usr/local/lib/php/phabricator/bin/config set mysql.pass YOUR-MARIADB-ROOT-PASSWORD</code></code></p>
+
+<p><code><code>
+/usr/local/lib/php/phabricator/bin/config set mysql.host YOUR-JAIL-IP
+/usr/local/lib/php/phabricator/bin/config set mysql.pass YOUR-MARIADB-ROOT-PASSWORD
+</code></code></p>
+
 <p>Then also to execute <code>storage upgrade</code>:</p>
-<p><code><code>/usr/local/lib/php/phabricator/bin/storage upgrade</code></code></p>
+
+<p><code><code>
+/usr/local/lib/php/phabricator/bin/storage upgrade
+</code></code></p>
+
 <p>You should also fix eventual issues, when <code>storage upgrade</code> suggests it.</p>
+
 <h3>Administrative Access</h3>
+
 <p>The guide will tell you to setup administrator access at this point.
 You don't need to separate the admin from users, if you are a user
 yourself. Just setup your account here in this case.</p>
+
 <h3>Unresolved Issues</h3>
+
 <p>Visiting the Phabricator installation again (keep on refreshing the
 browser tab), will tell you about problems with your installation.
 Resolve them one after another until Phabricator is satisfied.</p>
+
 <p>Here are solutions to some "issues" that occur on FreeBSD installations.</p>
+
 <h4>Base URI</h4>
-<p><code><code>/usr/local/lib/php/phabricator/bin/config set phabricator.base-uri 'http://YOUR-JAIL-HOSTNAME/'</code></code></p>
+
+<p><code><code>
+/usr/local/lib/php/phabricator/bin/config set phabricator.base-uri 'http://YOUR-JAIL-HOSTNAME/'
+</code></code></p>
+
 <h4>PHP setup</h4>
-<p><code><code>cd /usr/local/etc/
-cp php.ini-production php.ini</code></code></p>
+
+<p><code><code>
+cd /usr/local/etc/
+cp php.ini-production php.ini
+</code></code></p>
+
 <p>In <code>/usr/local/etc/php.ini</code>, replace the <code>post_max_size</code> setting to this value:</p>
-<p><code><code>post_max_size = 64M</code></code></p>
+
+<p><code><code>
+post_max_size = 64M
+</code></code></p>
+
 <p>and insert these lines:</p>
-<p><code><code>date.timezone = Europe/Berlin
-opcache.validate_timestamps=0</code></code></p>
+
+<p><code><code>
+date.timezone = Europe/Berlin
+opcache.validate_timestamps=0
+</code></code></p>
+
 <p>Then restart PHP-FPM:</p>
-<p><code><code>/usr/local/etc/rc.d/php-fpm restart</code></code></p>
+
+<p><code><code>
+/usr/local/etc/rc.d/php-fpm restart
+</code></code></p>
+
 <h4>Authentication Setup</h4>
+
 <p>Follow the guide to set up <em>Authentication Providers</em>
 directly in the web UI.</p>
+
 <h4>Enable Pygments</h4>
+
 <p>Follow the guide to set up <em>Pygments</em>. It is also done
 with the web UI.</p>
+
 <h4>Alternate File Domain</h4>
+
 <p>You can ignore this issue, but read about the implications,
 because it is important in cases you offer public access over
 internet.</p>
+
 <h4>Fixing MariaDB performance issues</h4>
+
 <p>In <code>/var/db/mysql/my.cnf</code>:</p>
-<p><code><code>[mysqld]
+
+<p><code><code>
+[mysqld]
 max_allowed_packet=128M
 sql_mode=STRICT_ALL_TABLES
 ft_stopword_file=/usr/local/lib/php/phabricator/resources/sql/stopwords.txt
 ft_min_word_len=3
 ft_boolean_syntax=' |-&gt;&lt;()~*:""&amp;^'
-innodb_buffer_pool_size=1000M</code></code></p>
+innodb_buffer_pool_size=1000M
+</code></code></p>
+
 <p>Then restart the MariaDB server and repair the search table.</p>
-<p><code><code>/usr/local/etc/rc.d/mysql-server restart
+
+<p><code><code>
+/usr/local/etc/rc.d/mysql-server restart
 mysql -u root -p
-mysql-prompt# REPAIR TABLE phabricator_search.search_documentfield;</code></code></p>
+mysql-prompt# REPAIR TABLE phabricator_search.search_documentfield;
+</code></code></p>
+
 <h4>Setup storage</h4>
+
 <p>For local file storage:</p>
-<p><code><code>mkdir -p /usr/local/www/phab/files
+
+<p><code><code>
+mkdir -p /usr/local/www/phab/files
 chown -R phd:www /usr/local/www/phab/files
 chmod -R 775 /usr/local/www/phab/files
-/usr/local/lib/php/phabricator/bin/config set storage.local-disk.path /usr/local/www/phab/files</code></code></p>
+/usr/local/lib/php/phabricator/bin/config set storage.local-disk.path /usr/local/www/phab/files
+</code></code></p>
+
 <h4>phd Daemon</h4>
+
 <p>Make <code>phd</code> user and add to group <code>www</code>. Simply answer what <code>adduser</code> asks
 and set Phabricator phd user to <code>phd</code>.</p>
-<p><code><code>adduser
+
+<p><code><code>
+adduser
 /usr/local/lib/php/phabricator/bin/config set phd.user phd
 /usr/local/etc/rc.d/phd stop
 chown -R phd:phd /var/tmp/phd
-/usr/local/etc/rc.d/phd start</code></code></p>
+/usr/local/etc/rc.d/phd start
+</code></code></p>
+
 <p>Insert into <code>/etc/rc.conf</code>:</p>
-<p><code><code>phd_enable="YES"</code></code></p>
+
+<p><code><code>
+phd_enable="YES"
+</code></code></p>
+
 <h4>Diffusion setup</h4>
+
 <p>Add user <code>git</code> for your VCS user and set home
 directory to <code>/usr/local/www/phab/git</code>.</p>
-<p><code><code>adduser</code></code></p>
+
+<p><code><code>
+adduser
+</code></code></p>
+
 <p>Install <code>sudo</code> and make the repository root:</p>
-<p><code><code>portmaster -d security/sudo
+
+<p><code><code>
+portmaster -d security/sudo
 mkdir /usr/local/www/phab/repo
 chown -R phd:phd /usr/local/www/phab/repo
 /usr/local/lib/php/phabricator/bin/config set repository.default-local-path /usr/local/www/phab/repo
-/usr/local/lib/php/phabricator/bin/config set diffusion.ssh-user git</code></code></p>
+/usr/local/lib/php/phabricator/bin/config set diffusion.ssh-user git
+</code></code></p>
+
 <p>Use <code>visudo</code> to insert this line into the configuration:</p>
-<p><code><code>git ALL=(phd) SETENV: NOPASSWD: /usr/local/bin/git-upload-pack, /usr/local/bin/git-receive-pack</code></code></p>
+
+<p><code><code>
+git ALL=(phd) SETENV: NOPASSWD: /usr/local/bin/git-upload-pack, /usr/local/bin/git-receive-pack
+</code></code></p>
+
 <h5>Setup SSH Access</h5>
+
 <p>First move the existing <code>sshd</code> to port <code>222</code> by setting this line in <code>/etc/ssh/sshd_config</code></p>
-<p><code><code>Port 222</code></code></p>
+
+<p><code><code>
+Port 222
+</code></code></p>
+
 <p>Restart the jail on the <em>jail host</em> with and reconnect, this time
 (and from now on!) using port 222. Continue with user <code>root</code>:</p>
-<p><code><code>/etc/rc.d/jail restart phab
+
+<p><code><code>
+/etc/rc.d/jail restart phab
 ssh -p222 user@YOUR-JAIL-HOST-IP
 su -l
-cp /usr/local/lib/php/phabricator/resources/sshd/sshd_config.phabricator.example /etc/ssh/sshd_config.phabricator</code></code></p>
+cp /usr/local/lib/php/phabricator/resources/sshd/sshd_config.phabricator.example /etc/ssh/sshd_config.phabricator
+</code></code></p>
+
 <p>Copy this to <code>/etc/ssh/sshd_config.phabricator</code></p>
-<p><code><code>AuthorizedKeysCommand /etc/ssh/phabricator-ssh-hook.sh
+
+<p><code><code>
+AuthorizedKeysCommand /etc/ssh/phabricator-ssh-hook.sh
 AuthorizedKeysCommandUser git
 AllowUsers git
 Port 22
@@ -263,45 +452,82 @@ AllowTcpForwarding no
 PrintMotd no
 PrintLastLog no
 PasswordAuthentication no
-AuthorizedKeysFile none</code>
-<code>PidFile /var/run/sshd-phabricator.pid</code></code></p>
+AuthorizedKeysFile none
+</code>
+<code>
+PidFile /var/run/sshd-phabricator.pid
+</code></code></p>
+
 <p>Then copy the ssh hook script that is a part of the Phabricator
 distribution:</p>
-<p><code><code>cp /usr/local/lib/php/phabricator/resources/sshd/phabricator-ssh-hook.sh /etc/ssh/phabricator-ssh-hook.sh</code></code></p>
+
+<p><code><code>
+cp /usr/local/lib/php/phabricator/resources/sshd/phabricator-ssh-hook.sh /etc/ssh/phabricator-ssh-hook.sh
+</code></code></p>
+
 <p>Take a look at <code>/etc/ssh/phabricator-ssh-hook.sh</code> and correct 2 lines and
 add a small path correction:</p>
-<p><code><code>VCSUSER="git"</code>
-<code>...
+
+<p><code><code>
+VCSUSER="git"
+</code>
+<code>
+...
 PATH=$PATH:/usr/local/bin
-ROOT="/usr/local/lib/php/phabricator"</code></code></p>
+ROOT="/usr/local/lib/php/phabricator"
+</code></code></p>
+
 <p>Then start the <code>sshd</code> manually:
-<code><code>/usr/sbin/sshd -f /etc/ssh/sshd_config.phabricator</code></code></p>
+<code><code>
+/usr/sbin/sshd -f /etc/ssh/sshd_config.phabricator
+</code></code></p>
+
 <p>Upload an <code>ssh</code> key to your user's profile in Phabricator. It behind
 the <em>Tool</em> button (in top right corner), then click in sidebar menu
 on <em>SSH Public Keys</em>.</p>
+
 <p>Now test the access using this public key by typing:</p>
-<p><code><code>echo {} | ssh git@YOUR-JAIL-IP conduit conduit.ping</code></code></p>
+
+<p><code><code>
+echo {} | ssh git@YOUR-JAIL-IP conduit conduit.ping
+</code></code></p>
+
 <p>After confirming with <code>yes</code> (you won't see it again), it should
 return something like this:</p>
-<p><code><code>{"result":"JAIL-HOST-NAME","error_code":null,"error_info":null}</code></code></p>
+
+<p><code><code>
+{"result":"JAIL-HOST-NAME","error_code":null,"error_info":null}
+</code></code></p>
+
 <p>If not, something is wrong. Take a look <a href="https://secure.phabricator.com/book/phabricator/article/diffusion_hosting/">here</a>
 for more information.</p>
+
 <h2>Some improvements</h2>
+
 <p>The startup method of Phabricator services is not very well suited for
 FreeBSD jails. It is better to add some startup scripts that also fix a few
 problems.</p>
+
 <p>I have published the scripts needed to startup the typical services here:</p>
+
 <ul>
 <li><a href="https://gist.github.com/nakal/f0d109f5562b667fde95">Phabricator SSHD rc.d script</a></li>
 <li><a href="https://gist.github.com/nakal/6a29af5e543e28f2d636">Phabricator PHD rc.d script</a></li>
 <li><a href="https://gist.github.com/nakal/3ea4a2c3be9985fb93a4">Phabricator Aphlict rc.d script</a></li>
 </ul>
+
 <p>In <code>rc.conf</code> add these lines:</p>
-<p><code><code>phabricator_sshd_enable="YES"
+
+<p><code><code>
+phabricator_sshd_enable="YES"
 phabricator_phd_enable="YES"
-phabricator_aphlict_enable="YES"</code></code></p>
+phabricator_aphlict_enable="YES"
+</code></code></p>
+
 <h2>Handle upgrades</h2>
+
 <p>Read <a href="../../../2015/09/27/phabricator-upgrade.html">this article</a>.</p>
+
 		<div class="footer">» <a href="#top">Scroll back to top</a><a name="bottom"></a></div>
 	</div>
 </body>

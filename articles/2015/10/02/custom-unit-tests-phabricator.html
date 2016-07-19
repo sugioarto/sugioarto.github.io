@@ -42,91 +42,138 @@
 <div class="nav"><a href="../../../../articles/2015/09/27/phabricator-upgrade.html">«&nbsp;Previous article</a></div>
 <div class="date">2015-10-02</div>
 <h1>Custom Unit Tests with Arcanist</h1>
+
 <p><a href="http://www.phabricator.org">Phabricator</a> is a project management tool with
 integrated repository, bug tracker and many more tools.
 <a href="https://secure.phabricator.com/book/phabricator/article/arcanist/">Arcanist</a>
 is a command line client for many of Phabricators services. It supports
 developers to write good software in a way that conforms to modern standards.</p>
+
 <p>Since good software is always tested and one good test is to write
 <a href="http://martinfowler.com/bliki/UnitTest.html">unit tests</a>, Arcanist supports
 the user to use its unit test modules for some test frameworks. You just need
 to specify the default test engine.
+
 <p>In this article, I want to write down and show you how to set up
 Arcanist to execute custom unit tests with a custom unit test engine,
 because sometimes there are no standard engines that support your
 unit test workflow.</p>
+
 <p>Let's go through it, step by step.</p>
+
 <h2>Setting Up For Unit Tests</h2>
+
 <p>I assume that you have already set up Arcanist to communicate
 with your Phabricator installation, so I will skip these steps here.</p>
+
 <p>Your <code>.arcconfig</code> in the project root should look like this:</p>
+
 <p><code><code>{
     "phabricator.uri" : "http://phabricator.example.org/",
     "repository.callsign" : "MYREPO",
     "unit.engine" : "MyUnitTestEngine",
     "load" : [ "lib" ]
-}</code>
+}
+</code>
 </code></p>
+
 <p>The <code>unit.engine</code> entry specifies what unit test engine class to call
 when executing unit tests. The entry <code>load</code> is collection of directories where
 <code>libphutil</code> can find the your custom <a href="http://www.php.net/">PHP</a> classes that
 also contain your <code>MyUnitTestEngine</code> class. The entry here will scan
 the directory <code>./lib</code> for a <code>libphutil</code> library descriptor.</p>
+
 <h2>Writing a libphutil library descriptor</h2>
+
 <p>It's easy. Place this in a file called <code>__phutil_library_init__.php</code>
 in a subdirectory <code>./lib</code> in your project repository. It will be read
 automatically whereever it is (this is just an example).</p>
+
 <p><code><code>&lt;?php
 phutil_register_library('my-unit-test-engine', __FILE__);
-?&gt;</code>
+?&gt;
+</code>
 </code></p>
+
 <h2>Write a Unit Test Engine Class</h2>
+
 <p>This is a sample test engine. It shows how to return unit test
 results with such class, but of course it does not really run
 any real tests. Place this file in the subdirectory of <code>./lib</code> in
 your project, for example <code>./lib/engine/MyUnitTestEngine.php</code>.</p>
-<p><code><code>&lt;?php</code>
-<code>final class MyUnitTestEngine extends ArcanistUnitTestEngine {</code>
-<code>public function run() {
-        $sample_results = array();</code>
-<code># example for a passed test result
+
+<p><code><code>&lt;?php
+</code>
+<code>
+final class MyUnitTestEngine extends ArcanistUnitTestEngine {
+</code>
+<code>
+    public function run() {
+        $sample_results = array();
+</code>
+<code>
+        # example for a passed test result
         $result_success = new ArcanistUnitTestResult();
         $result_success-&gt;setName("A successful test");
         $result_success-&gt;setResult(ArcanistUnitTestResult::RESULT_PASS);
-        $result_success-&gt;setDuration(1);</code>
-<code># example for a failed test result
+        $result_success-&gt;setDuration(1);
+</code>
+<code>
+        # example for a failed test result
         $result_failure = new ArcanistUnitTestResult();
         $result_failure-&gt;setName("A failed test");
         $result_failure-&gt;setResult(ArcanistUnitTestResult::RESULT_FAIL);
         $result_failure-&gt;setUserData(
             "This test failed, because we wanted it to fail."
-        );</code>
-<code># add both results
+        );
+</code>
+<code>
+        # add both results
         $sample_results[] = $result_success;
-        $sample_results[] = $result_failure;</code>
-<code># return the result set
+        $sample_results[] = $result_failure;
+</code>
+<code>
+        # return the result set
         return $sample_results;
-    }</code>
-<code>}</code></code></p>
+    }
+</code>
+<code>
+}
+</code></code></p>
+
 <h2>Prepare the Unit Test Engine</h2>
+
 <p>The unit test engine classes and the descriptor are in place.
 Now, simply run these two commands in the project root directory.</p>
-<p><code><code># /usr/local/lib/php/libphutil/scripts/phutil_rebuild_map.php ./lib</code>
-<code># arc liberate</code></code></p>
+
+<p><code><code># /usr/local/lib/php/libphutil/scripts/phutil_rebuild_map.php ./lib
+</code>
+<code># arc liberate
+</code></code></p>
+
 <p>This will prepare the class to be used by Arcanist later.</p>
+
 <h3>Problems with Arcanist on FreeBSD</h3>
+
 <p>On <a href="http://www.freebsd.org/">FreeBSD</a> there is a problem with
 the Arcanist installation. To fix it, you should execute
 <code>arc liberate</code> in <code>/usr/local/lib/php/arcanist/src</code> itself.</p>
+
 <p>After this, the <code>arc liberate</code> command in your own repository
 should work fine.</p>
+
 <h2>Test the Sample Engine</h2>
+
 <p>Now, everything is ready. The unit tests are started with:</p>
-<p><code><code># arc unit .</code></code></p>
+
+<p><code><code># arc unit .
+</code></code></p>
+
 <p><code>arc unit</code> gets paths as parameters which can restrict the unit
 test to a subcomponent. You can access this path with the
 <code>getPaths()</code> function, but you need to handle the restriction
 yourself in your custom unit test engine.</p>
+
 		<div class="footer">» <a href="#top">Scroll back to top</a><a name="bottom"></a></div>
 	</div>
 </body>
