@@ -111,6 +111,7 @@ mkdir mroot
 cd /usr/src
 make installworld DESTDIR=/jails/mroot
 cd /jails/mroot
+chflags -R 0 var
 rm -rf etc var boot
 rmdir root tmp
 mkdir s
@@ -124,8 +125,6 @@ mkdir ports
 rmdir local obj
 ln -s ../s/usr-local local
 ln -s ../s/tmp/obj obj
-cd bin
-ln -s /usr/local/bin/perl perl
 </code></code></p>
 
 <h2>Remove old skel master</h2>
@@ -134,6 +133,7 @@ ln -s /usr/local/bin/perl perl
 jails with the method described in this article.</p>
 
 <p><code><code>cd /jails
+chflags -R 0 skel.bak
 rm -rf skel.bak
 mv skel skel.bak
 </code></code></p>
@@ -229,10 +229,11 @@ mount /jails/XXX/s
 
 <h3>Example <code>/etc/make.conf</code></h3>
 
-<p>Make your settings. You will need the
-first 3 lines here to make FreeBSD ports work properly.
-This configuration needs to be adapted in each of
-your jails.</p>
+<p>In case you don't use package build systems like
+<a href="https://www.freebsd.org/doc/handbook/ports-poudriere.html">Poudriere</a> and
+use portmaster or similar local build tools, you will need to make
+these settings that should be modified for your jails (except for the
+first three lines here with the directory paths).</p>
 
 <p><code><code>DISTDIR=/s/distfiles
 WRKDIRPREFIX=/s/wrkdir
