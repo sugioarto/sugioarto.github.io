@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Sugioarto</title>
+	<meta charset="UTF-8" />
+	<link rel="stylesheet" type="text/css" href="../../../../css/default.css" />
+	<link rel="stylesheet" type="text/css" href="../../../../css/mobile.css" media="handheld" />
+	<link rel="shortcut icon" type="image/png" href="../../../../img/favicon.png" />
+	<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-59952473-1', 'auto');ga('send', 'pageview');</script>
+	
+</head>
+
+<body>
+	<div class="sidebar">
+		<ul>
+			<li><a href="../../../../index.html">Main page</a></li>
+			<li><a href="../../../../projects/index.html">Projects</a></li>
+			<li><a href="../../../../contact/index.html">Contact</a></li>
+		</ul>
+	</div>
+
+	<a name="top"></a>
+	<div class="head"><div class="ornament"></div><h1>Sugioarto</h1></div>
+
+	<div class="as">
+		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+		<!-- Skyscraper -->
+		<ins class="adsbygoogle"
+			style="display:inline-block;width:300px;height:600px"
+			data-ad-client="ca-pub-6843164300322635"
+			data-ad-slot="5260616199"></ins>
+		<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+	</div>
+	<div class="main">
+		<noscript>
+			<div class="warning">
+			<h1>JavaScript is not enabled</h1>
+			<p>Please enable JavaScript for this webpage to make it function properly.</p>
+			</div>
+		</noscript>
+
+<div class="nav"><a href="../../../../articles/2016/05/04/openbsd-efi-gpt-fde.html">«&nbsp;Previous article</a></div>
+<div class="date">2018-01-01</div>
+<h1>NFSv4 and Kerberos on FreeBSD</h1>
+
+<p>This is a HowTo that describes a NFS setup based on Kerberos (Heimdal) that enhances the security
+while sharing NFS filesystems. While running an unprotected NFS server on a network can be a risk,
+when a NFS server is accessible and users have physical control over their workstation, combining
+NFS with Kerberos can protect the NFS-shared data against access from unauthorized users.</p>
+
+
+<p>These HowTo assumes that you run two or three hosts. This is a small setup, but it should give
+you an idea how to expand it for your specific use case.</p>
+
+<p>A two-hosts setup is:</p>
+
+<ul>
+<li>KDC and NFS server on one host (<code>server1.sugioarto.com</code>)</li>
+<li>one NFS client (<code>workstation.sugioarto.com</code>)</li>
+</ul>
+
+<p>The three-hosts setup is:</p>
+
+<ul>
+<li>KDC (<code>server1.sugioarto.com</code>)</li>
+<li>NFS server (<code>nfs.sugioarto.com</code>)</li>
+<li>NFS client (<code>workstation.sugioarto.com</code>)</li>
+</ul>
+
+<p>I added the latter one for better understanding how the host keys are managed. You'll
+see later why this might be confusing without considering separate hosts.</p>
+
+<h2>Prerequisites</h2>
+
+<p>There are simple things that can make your life hard. Well, it has made mine hard, because I haven't
+understood this for over a year. And you should avoid these kinds of traps and save some time by
+reviewing your host configuration.</p>
+
+<h3>/etc/hosts on all servers and workstations involved</h3>
+
+<p>All kinds of components rely on identifying the hostnames. Please make sure that your
+hosts have exactly <strong>one</strong> hostname that is the FQDN. Please don't use any aliases.</p>
+
+<p>Example of a correct host entry:</p>
+
+<p><code><code>
+192.168.0.22 nfs.sugioarto.com
+</code></code></p>
+
+<p>If you do this wrong, it will result in errors like this (you can debug them by running gssd in verbose mode
+<code>gssd -hvd</code>):</p>
+
+<p><code><code>
+gssd_acquire_cred: done major=0x70000 minor=0
+</code></code></p>
+
+<p>The <code>7</code> in this code is not documented, but it means that the host key could not be loaded. Of course,
+it won't load correctly when the NFS server asks for a key with the wrong hostname.</p>
+
+<h3>Directory /var/heimdal on Kerberos KDC</h3>
+
+<p>If you ever have made some experiments with Kerberos/Heimdal, make sure that you tidy
+up. If you don't need your keys/tickets anymore then make sure that this directory is
+empty, bevor starting.</p>
+
+<h3>Packages</h3>
+
+<p>If you have replaced base <code>openssl</code> with <code>libressl</code>, like I have, you will notice
+that many packages that use GSSAPI will fail to install properly. I altered the
+options for GSSAPI to install Kerberos Heimdal from ports. This is not relevant
+for our purposes here, but it's sometimes nice to run more Kerberos services,
+if you already activate the KDC on a system.</p>
+
+<h2>Heimdal on KDC</h2>
+
+<p>Heimdal is a version of Kerberos used in the base system on FreeBSD. It is documented
+<a href="https://www.freebsd.org/doc/handbook/kerberos5.html">here</a>. I'll describe the setup
+needed to run the NFS server and client here step by step.</p>
+
+<h3>/etc/krb5.conf for all hosts involved</h3>
+
+<p>This configuration tells clients how to find Kerberos services.</p>
+
+<p><code><code>
+[libdefaults]
+default_realm = SUGIOARTO.COM
+</code>
+<code>
+[domain_realm]
+.sugioarto.com = SUGIOARTO.COM
+</code>
+<code>
+[realms]
+SUGIOARTO.COM = {
+        kdc = server1.sugioarto.com
+        admin_server = server1.sugioarto.com
+        kpasswd_server = server1.sugioarto.com
+}
+</code></code></p>
+
+<p>If you prefer your clients to use DNS, you can remove the <code>[realms]</code> part
+from this configuration and add the entries below to your DNS server. Here an example
+for <code>unbound.conf</code>. Insert these lines after your <code>local-zone</code> declaration:</p>
+
+<p><code><code>
+local-data: "_kerberos.sugioarto.com.           IN  TXT     SUGIOARTO.COM"
+local-data: "kerberos.sugioarto.com             CNAME       server1.sugioarto.com."
+local-data: "_kerberos._udp.sugioarto.com.      IN  SRV     01 00 88 server1.sugioarto.com."
+local-data: "_kerberos._tcp.sugioarto.com.      IN  SRV     01 00 88 server1.sugioarto.com."
+local-data: "_kpasswd._udp.sugioarto.com.       IN  SRV     01 00 464 server1.sugioarto.com."
+local-data: "_kpasswd._tcp.sugioarto.com.       IN  SRV     01 00 464 server1.sugioarto.com."
+local-data: "_kerberos-adm._tcp.sugioarto.com.  IN  SRV     01 00 749 server1.sugioarto.com."
+</code></code></p>
+
+<h3>/etc/rc.conf</h3>
+
+<p>You'll need some services to be started. Add these lines to your <code>/etc/rc.conf</code>:</p>
+
+<p><code><code>
+kdc_enable="YES"
+kadmind_enable="YES"
+kpasswdd_enable="YES"
+gssd_enable="YES"
+gssd_flags="-h"
+</code></code></p>
+
+<p>Start them now (as root), except for <code>gssd</code>. We'll start it later, after generating
+the host keys.</p>
+
+<p><code><code>
+/etc/rc.d/kdc start
+/etc/rc.d/kadmind start
+/etc/rc.d/kpasswdd start
+</code></code></p>
+
+<h3>Initialize the KDC</h3>
+
+<p>On KDC host:</p>
+
+<p><code><code>
+kstash --random-key
+kadmin -l
+kadmin&gt; init SUGIOARTO.COM
+Realm max ticket life [unlimited]:
+Realm max renewable ticket life [unlimited]:
+kadmin&gt; q
+</code></code></p>
+
+<p>The realm has been initialized.</p>
+
+<h3>Add your user principals</h3>
+
+<p>Without a valid user, you won't be able to access any single file on
+the file server, because you'll be always unauthenticated and
+consequently unauthorized. Even <code>root</code> cannot access files, if you
+don't generate a principal in Kerberos.</p>
+
+<p>I'll just show how to add one single user (<code>myuser</code>), but it's trivial
+to add more. Make sure, you use system user names, so the credentials
+can be mapped to unix users.</p>
+
+<p><code><code>
+kadmin -l
+kadmin&gt; add myuser
+Max ticket life [1 day]:
+Max renewable life [1 week]:
+Principal expiration time [never]:
+Password expiration time [never]:
+Attributes []:
+myuser@SUGIOARTO.COM's Password:
+Verifying - myuser@SUGIOARTO.COM's Password:
+kadmin&gt; q
+</code></code></p>
+
+<h3>Test KDC</h3>
+
+<p>As user <code>myuser</code> (generated above). Try to get a ticket:</p>
+
+<p><code><code>
+kinit
+myuser@SUGIOARTO.COM's Password:
+klist
+</code></code></p>
+
+<p>The last command should show you the ticket that you got by
+authenticating with the KDC.</p>
+
+<p>If something fails, try to restart the KDC service with <code>/etc/rc.d/kdc restart</code>
+and/or revisit the steps above.</p>
+
+<p>If everything is OK, you can destroy the tickets with:</p>
+
+<p><code><code>
+kdestroy
+</code></code></p>
+
+<p>You can see again with <code>klist</code> that they are gone.</p>
+
+<h3>Generate a principal for the NFS server service</h3>
+
+<p>The NFS server <code>nfsd</code> wants a principal when it starts. It is hardcoded
+and is constructed by using the prefix <code>nfs/</code> concatenated with the
+hostname. For our three-host setup here it would be <code>nfs/nfs.sugioarto.com</code>.
+Since we agreed to have only one name for our host when KDC and NFS server
+are merged in our two-host setup, it would be <code>nfs/server1.sugioarto.com</code>,
+of course.</p>
+
+<p>Here is how to generate the host key (for the three-host setup):</p>
+
+<p><code><code>
+kadmin -l
+kadmin&gt; add --random-key nfs/nfs.sugioarto.com
+Max ticket life [1 day]:unlimited
+Max renewable life [1 week]:unlimited
+Principal expiration time [never]:
+Password expiration time [never]:
+Attributes []:
+kadmin&gt; q
+</code></code></p>
+
+<h3>Generate a principal for the NFS client</h3>
+
+<p>This is similar to above. Notice we use the prefix
+<code>host/</code> here that we need to specify for the
+NFS mount with the parameter <code>gssname=host</code> on the NFS
+client later.</p>
+
+<p><code><code>
+kadmin -l
+kadmin&gt; add --random-key host/workstation.sugioarto.com
+Max ticket life [1 day]:unlimited
+Max renewable life [1 week]:unlimited
+Principal expiration time [never]:
+Password expiration time [never]:
+Attributes []:
+kadmin&gt; q
+</code></code></p>
+
+<h2>NFS server setup</h2>
+
+<p>The NFS server consists of several components that need to interact
+together.</p>
+
+<h3>Add the host key to the NFS server</h3>
+
+<p>The <code>gssd</code> manages the tickets for the host and its services. It loads
+the keys from <code>/etc/krb5.keytab</code>. The <code>nfsd</code> asks for its ticket when it's
+started. We need to import it, but first we need it exported from the KDC.</p>
+
+<p>Once again, we log in into KDC and export the NFS server service ticket
+to a file:</p>
+
+<p><code><code>
+kadmin -l
+kadmin&gt; ext_keytab --keytab=/tmp/nfs.keytab nfs/nfs.sugioarto.com
+kadmin&gt; q
+</code></code></p>
+
+<p>The file <code>/tmp/nfs.keytab</code> contains the secret host key. Please protect it
+adequately during transfers.</p>
+
+<p>Copy this file over to the NFS server (e.g. with <code>scp</code>) and delete it from <code>/tmp/nfs.keytab</code>
+on the KDC host.</p>
+
+<p>On the NFS server <code>nfs.sugioarto.com</code>, you will need to import the ticket
+into its <code>/etc/krb5.keytab</code>. The following command merges the ticket into this file,
+without destroying other imported tickets:</p>
+
+<p><code><code>
+ktutil copy nfs.keytab /etc/krb5.keytab
+</code></code></p>
+
+<h4>Two-host setup</h4>
+
+<p>For the two-host setup, it's enough to import it locally, which is easier:</p>
+
+<p><code><code>
+kadmin -l
+kadmin&gt; ext_keytab nfs/server1.sugioarto.com
+kadmin&gt; q
+</code></code></p>
+
+<h3>Restart services</h3>
+
+<p>On the NFS server, after the ticket import, the services need to be restarted:</p>
+
+<p><code><code>
+/etc/rc.d/gssd restart
+/etc/rc.d/nfsd restart
+</code></code></p>
+
+<h3>/etc/exports</h3>
+
+<p>Minimal <code>/etc/exports</code> file for NFSv4 is this:</p>
+
+<p><code><code>
+V4: / -sec=krb5p
+</code></code></p>
+
+<p>Please be aware that security is now restricted to <code>krb5p</code> and everything else
+will fail. Please read the manual, if you don't want strict settings.</p>
+
+<p>If you change <code>/etc/exports</code>, you'll need to restart <code>mountd</code>:</p>
+
+<p><code><code>
+/etc/rc.d/mountd restart
+</code></code></p>
+
+<h3>ZFS setup</h3>
+
+<p>You don't need to use <code>/etc/exports</code> for exporting the mountpoints,
+because ZFS has got commands to export datasets.
+The command to use is:</p>
+
+<p><code><code>
+zfs set sharenfs='-sec=krb5p' pool/my-shared-dataset
+</code></code></p>
+
+<p>You can also use additional <code>/etc/exports</code> options. There is one constraint.
+You can only export datasets that are mounted. If you try to export a
+dataset that is not mountable, even it's exported like above, you'll get
+cryptic errors on the client side.</p>
+
+<p>In case you make a parent dataset mountable and mount it, the child
+datasets might disappear. You'll need to remount them again.</p>
+
+<h2>NFS client setup</h2>
+
+<p>These steps are needed for <code>workstation.sugioarto.com</code> which is
+the NFS client.</p>
+
+<h3>Import the host ticket</h3>
+
+<p>On the KDC server, we need to export the ticket for
+the NFS client <code>workstation.sugioarto.com</code>:</p>
+
+<p><code><code>
+kadmin -l
+kadmin&gt; ext_keytab --keytab=/tmp/krb5.keytab host/workstation.sugioarto.com
+kadmin&gt; q
+</code></code></p>
+
+<p>Copy the file <code>/tmp/krb5.keytab</code> over to <code>workstation.sugioarto.com</code> (e.g. with <code>scp</code>) and delete it from the
+<code>/tmp</code> directory on the KDC host.</p>
+
+<p>On <code>workstation.sugioarto.com</code>, move the file to <code>/etc/krb5.keytab</code> and protect it:</p>
+
+<p><code><code>
+chown root:wheel /etc/krb5.keytab
+chmod 600 /etc/krb5.keytab
+</code></code></p>
+
+<h3>/etc/rc.conf</h3>
+
+<p>Put this in your client's <code>/etc/rc.conf</code>:</p>
+
+<p><code><code>
+nfs_client_enable="YES"
+nfscbd_enable="YES"
+nfsuserd_enable="YES"
+gssd_enable="YES"
+gssd_flags="-h"
+</code></code></p>
+
+<p>Start the services:</p>
+
+<p><code><code>
+/etc/rc.d/nfsclient start
+/etc/rc.d/nfscbd start
+/etc/rc.d/nfsuserd start
+/etc/rc.d/gssd start
+</code></code></p>
+
+<h3>/etc/fstab</h3>
+
+<p>You can mount filesystems on the client during <code>late</code> startup phase, when
+the network is available:</p>
+
+<p><code><code>
+nfs.sugioarto.com:/my-shared-dataset       /nfs/my-shared-dataset  nfs     rw,bg,soft,intr,nfsv4,tcp,sec=krb5p,gssname=host,late   0       0
+</code></code></p>
+
+<p>Don't forget that the mountpoint needs to exist:</p>
+
+<p><code><code>
+mkdir -p /nfs/my-shared-dataset
+</code></code></p>
+
+<h3>Test it!</h3>
+
+<p>Try to access <code>/nfs/my-shared-dataset</code> as <code>root</code>.</p>
+
+<p><code><code>
+cd /nfs/my-shared-dataset
+ls -l
+</code></code></p>
+
+<p>You can see that it is not allowed. Great! Even <code>root</code> needs a ticket!</p>
+
+<p>Log in as your user <code>myuser</code> that we have a valid ticket for.</p>
+
+<p><code><code>
+cd /nfs/my-shared-dataset
+ls -l
+</code></code></p>
+
+<p>It shouldn't work, either. Try again after getting a ticket. Type
+this as your user on <code>workstation.sugioarto.com</code>:</p>
+
+<p><code><code>
+kinit
+</code></code></p>
+
+<h3>Setup Kerberos in PAM</h3>
+
+<p>A Kerberos login is nice because you get a ticket on login for
+free, but it has got its downside, because if the KDC is down,
+you'll get ugly delays when you need to log in.</p>
+
+<p>There are two types of services that use PAM and for which you
+would like to generate tickets for transparently.
+<code>system</code> is a generic service that is imported almost everywhere.
+<code>xdm</code> is for the X display manager.</p>
+
+<h4><code>/etc/pam.d/system</code></h4>
+
+<p><code><code>
+# auth
+auth            sufficient      pam_opie.so             no_warn no_fake_prompts
+auth            requisite       pam_opieaccess.so       no_warn allow_local
+auth            sufficient      pam_krb5.so             no_warn try_first_pass
+#auth           sufficient      pam_ssh.so              no_warn try_first_pass
+auth            required        pam_unix.so             no_warn try_first_pass nullok
+</code>
+<code>
+# account
+account         required        pam_krb5.so
+account         required        pam_login_access.so
+account         required        pam_unix.so
+</code>
+<code>
+# session
+#session        optional        pam_ssh.so              want_agent
+session         required        pam_lastlog.so          no_fail
+</code>
+<code>
+# password
+password        sufficient      pam_krb5.so             no_warn try_first_pass
+password        required        pam_unix.so             no_warn try_first_pass
+</code></code></p>
+
+<h4><code>/etc/pam.d/xdm</code></h4>
+
+<p><code><code>
+# auth
+auth            sufficient      pam_krb5.so             no_warn try_first_pass
+#auth           sufficient      pam_ssh.so              no_warn try_first_pass
+auth            required        pam_unix.so             no_warn try_first_pass
+</code>
+<code>
+# account
+account         required        pam_nologin.so
+account         required        pam_krb5.so
+account         required        pam_unix.so
+</code>
+<code>
+# session
+#session        required        pam_ssh.so              want_agent
+session         required        pam_lastlog.so          no_fail
+</code>
+<code>
+# password
+password        required        pam_deny.so
+</code></code></p>
+
+<h4>Slim display manager</h4>
+
+<p>It should simply include <code>system</code>, but please check the file
+<code>/usr/local/etc/pam.d/slim</code>. It should look like this:</p>
+
+<p><code><code>
+auth            include         system
+account         include         system
+session         include         system
+password        include         system
+</code></code></p>
+
+		<div class="footer">» <a href="#top">Scroll back to top</a><a name="bottom"></a></div>
+	</div>
+</body>
+</html>
