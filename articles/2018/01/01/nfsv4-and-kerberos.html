@@ -49,17 +49,17 @@ when a NFS server is accessible and users have physical control over their works
 NFS with Kerberos can protect the NFS-shared data against access from unauthorized users.</p>
 
 
-<p>These HowTo assumes that you run two or three hosts. This is a small setup, but it should give
+<p>This HowTo assumes that you run two or three hosts. This is a small sample setup, but it should give
 you an idea how to expand it for your specific use case.</p>
 
-<p>A two-hosts setup is:</p>
+<p>A two-hosts sample setup used here is:</p>
 
 <ul>
 <li>KDC and NFS server on one host (<code>server1.sugioarto.com</code>)</li>
 <li>one NFS client (<code>workstation.sugioarto.com</code>)</li>
 </ul>
 
-<p>The three-hosts setup is:</p>
+<p>The three-hosts setup would be:</p>
 
 <ul>
 <li>KDC (<code>server1.sugioarto.com</code>)</li>
@@ -68,12 +68,20 @@ you an idea how to expand it for your specific use case.</p>
 </ul>
 
 <p>I added the latter one for better understanding how the host keys are managed. You'll
-see later why this might be confusing without considering separate hosts.</p>
+see later why this might be confusing without considering separate hosts.
+If you decide to use the two-hosts setup, you will need to follow KDC and NFS server
+setup for the server host and merge the configurations, e.g. <code>/etc/rc.conf</code>, manually.</p>
+
+<h2>Notes about security</h2>
+
+<p>Please check the security measures, after you have followed the HowTo. Many steps and
+hints here are not documented at all and I make errors, too. This is especially important,
+because you probably want to secure sensitive data with the help of Kerberos.</p>
 
 <h2>Prerequisites</h2>
 
-<p>There are simple things that can make your life hard. Well, it has made mine hard, because I haven't
-understood this for over a year. And you should avoid these kinds of traps and save some time by
+<p>There are simple things that can make your life hard. Well, they have made mine hard, because I haven't
+understood them for over a year. And you can avoid these kinds of traps and save some time by
 reviewing your host configuration.</p>
 
 <h3>/etc/hosts on all servers and workstations involved</h3>
@@ -87,7 +95,7 @@ hosts have exactly <strong>one</strong> hostname that is the FQDN. Please don't 
 192.168.0.22 nfs.sugioarto.com
 </code></code></p>
 
-<p>If you do this wrong, it will result in errors like this (you can debug them by running gssd in verbose mode
+<p>If you do this wrong, it will result in errors like this (you check and debug them by running gssd in verbose mode
 <code>gssd -hvd</code>):</p>
 
 <p><code><code>
@@ -101,7 +109,7 @@ it won't load correctly when the NFS server asks for a key with the wrong hostna
 
 <p>If you ever have made some experiments with Kerberos/Heimdal, make sure that you tidy
 up. If you don't need your keys/tickets anymore then make sure that this directory is
-empty, bevor starting.</p>
+empty before continuing with this HowTo.</p>
 
 <h3>Packages</h3>
 
@@ -160,12 +168,9 @@ local-data: "_kerberos-adm._tcp.sugioarto.com.  IN  SRV     01 00 749 server1.su
 kdc_enable="YES"
 kadmind_enable="YES"
 kpasswdd_enable="YES"
-gssd_enable="YES"
-gssd_flags="-h"
 </code></code></p>
 
-<p>Start them now (as root), except for <code>gssd</code>. We'll start it later, after generating
-the host keys.</p>
+<p>Start them now (as root).</p>
 
 <p><code><code>
 /etc/rc.d/kdc start
@@ -320,13 +325,33 @@ kadmin&gt; ext_keytab nfs/server1.sugioarto.com
 kadmin&gt; q
 </code></code></p>
 
+<h3>/etc/rc.conf</h3>
+
+<p>Put this in your NFS server <code>/etc/rc.conf</code> and replace <code>IP</code>
+with the IP that that NFS server needs to listen to:</p>
+
+<p><code><code>
+nfs_server_enable="YES"
+nfsv4_server_enable="YES"
+nfs_server_flags="-t -h IP"
+nfsuserd_enable="YES"
+mountd_enable="YES"
+mountd_flags="-h IP"
+rpcbind_enable="YES"
+gssd_enable="YES"
+gssd_flags="-h"
+</code></code></p>
+
 <h3>Restart services</h3>
 
 <p>On the NFS server, after the ticket import, the services need to be restarted:</p>
 
 <p><code><code>
 /etc/rc.d/gssd restart
+/etc/rc.d/rpcbind restart
+/etc/rc.d/mountd restart
 /etc/rc.d/nfsd restart
+/etc/rc.d/nfsuserd restart
 </code></code></p>
 
 <h3>/etc/exports</h3>
@@ -340,11 +365,24 @@ V4: / -sec=krb5p
 <p>Please be aware that security is now restricted to <code>krb5p</code> and everything else
 will fail. Please read the manual, if you don't want strict settings.</p>
 
-<p>If you change <code>/etc/exports</code>, you'll need to restart <code>mountd</code>:</p>
+<p>If you change <code>/etc/exports</code>, you'll need to restart <code>mountd</code> again:</p>
 
 <p><code><code>
 /etc/rc.d/mountd restart
 </code></code></p>
+
+<p>I decided to use <code>krb5p</code> as the most secure NFS mech. You can of course add more
+mechs. It makes sense to use <code>sys</code> for some exported filesystems.
+If you happen to export ZFS datasets with <code>sys</code> mech, please add the mech
+to the <code>V4</code> line:</p>
+
+<p><code><code>
+V4: / -sec=krb5p:sys
+</code></code></p>
+
+<p>Also check the overall security twice, because this behavior is not documented
+well and exclusive <code>krb5p</code> should still be in effect to protect private shares
+from users faking a UID.</p>
 
 <h3>ZFS setup</h3>
 
@@ -414,7 +452,7 @@ gssd_flags="-h"
 <h3>/etc/fstab</h3>
 
 <p>You can mount filesystems on the client during <code>late</code> startup phase, when
-the network is available:</p>
+the network is available. Put this into <code>/etc/fstab</code>:</p>
 
 <p><code><code>
 nfs.sugioarto.com:/my-shared-dataset       /nfs/my-shared-dataset  nfs     rw,bg,soft,intr,nfsv4,tcp,sec=krb5p,gssname=host,late   0       0
@@ -424,6 +462,12 @@ nfs.sugioarto.com:/my-shared-dataset       /nfs/my-shared-dataset  nfs     rw,bg
 
 <p><code><code>
 mkdir -p /nfs/my-shared-dataset
+</code></code></p>
+
+<p>Mount it now:</p>
+
+<p><code><code>
+mount /nfs/my-shared-dataset
 </code></code></p>
 
 <h3>Test it!</h3>
